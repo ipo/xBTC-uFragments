@@ -79,4 +79,5 @@ coverageEnv/
 .gitattributes
 
 # docker files
-docker/**
+docker/Dockerfile
+docker/**.sh

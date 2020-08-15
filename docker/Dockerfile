@@ -42,12 +42,20 @@ ADD package-lock.json package.json /code/
 RUN export NVM_DIR="$HOME/.nvm" && \. "$NVM_DIR/nvm.sh" && npm install
 RUN export NVM_DIR="$HOME/.nvm" && \. "$NVM_DIR/nvm.sh" && npx setup-local-chains
 
+# add truffle
+#RUN npm install -y truffle
+
 ADD . /code/
 
 # validate code
-RUN export NVM_DIR="$HOME/.nvm" && \. "$NVM_DIR/nvm.sh" && npm run lint
+#RUN export NVM_DIR="$HOME/.nvm" && \. "$NVM_DIR/nvm.sh" && npm run lint
 #RUN export NVM_DIR="$HOME/.nvm" && \. "$NVM_DIR/nvm.sh" && npm run coverage
 
 # run tests
-#CMD export NVM_DIR="$HOME/.nvm" && \. "$NVM_DIR/nvm.sh" && npx start-chain ganacheUnitTest && testrpc-sc --gasLimit 999999999999999999999999 & sleep 10 && export NVM_DIR="$HOME/.nvm" && \. "$NVM_DIR/nvm.sh" && npm test && npx truffle --network ganacheUnitTest test test/unit/UFragments.js
-CMD export NVM_DIR="$HOME/.nvm" && \. "$NVM_DIR/nvm.sh" && npx start-chain ganacheUnitTest && testrpc-sc --gasLimit 999999999999999999999999 > /dev/null & sleep 10 && export NVM_DIR="$HOME/.nvm" && \. "$NVM_DIR/nvm.sh" && npm test
+# individual tests: npx truffle --network ganacheUnitTest test test/unit/UFragments.js
+#RUN export NVM_DIR="$HOME/.nvm" && \. "$NVM_DIR/nvm.sh" && npx start-chain ganacheUnitTest && testrpc-sc --gasLimit 999999999999999999999999 > /dev/null & sleep 10 && export NVM_DIR="$HOME/.nvm" && \. "$NVM_DIR/nvm.sh" && npm test
+
+COPY docker/sign_and_send.py /code/
+
+#CMD bash
+CMD ./sign_and_send.py

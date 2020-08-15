@@ -45,7 +45,7 @@ async function setupContracts () {
     from: deployer
   });
   await uFragmentsPolicy.setMarketOracle(mockMarketOracle.address);
-  await uFragmentsPolicy.setCpiOracle(mockCpiOracle.address);
+  await uFragmentsPolicy.setDominusOracle(mockCpiOracle.address);
   await uFragmentsPolicy.setOrchestrator(orchestrator);
 }
 
@@ -128,27 +128,27 @@ contract('UFragments:setMarketOracle:accessControl', function (accounts) {
   });
 });
 
-contract('UFragmentsPolicy:setCpiOracle', async function (accounts) {
+contract('UFragmentsPolicy:setDominusOracle', async function (accounts) {
   before('setup UFragmentsPolicy contract', setupContracts);
 
   it('should set cpiOracle', async function () {
-    await uFragmentsPolicy.setCpiOracle(deployer);
-    expect(await uFragmentsPolicy.cpiOracle.call()).to.eq(deployer);
+    await uFragmentsPolicy.setDominusOracle(deployer);
+    expect(await uFragmentsPolicy.dominusOracle.call()).to.eq(deployer);
   });
 });
 
-contract('UFragments:setCpiOracle:accessControl', function (accounts) {
+contract('UFragments:setDominusOracle:accessControl', function (accounts) {
   before('setup UFragmentsPolicy contract', setupContracts);
 
   it('should be callable by owner', async function () {
     expect(
-      await chain.isEthException(uFragmentsPolicy.setCpiOracle(deployer, { from: deployer }))
+      await chain.isEthException(uFragmentsPolicy.setDominusOracle(deployer, { from: deployer }))
     ).to.be.false;
   });
 
   it('should NOT be callable by non-owner', async function () {
     expect(
-      await chain.isEthException(uFragmentsPolicy.setCpiOracle(deployer, { from: user }))
+      await chain.isEthException(uFragmentsPolicy.setDominusOracle(deployer, { from: user }))
     ).to.be.true;
   });
 });
@@ -509,7 +509,7 @@ contract('UFragmentsPolicy:Rebase', async function (accounts) {
       expect(log.event).to.eq('LogRebase');
       expect(log.args.epoch.eq(prevEpoch.plus(1))).to.be.true;
       log.args.exchangeRate.should.be.bignumber.eq(INITIAL_RATE_60P_MORE);
-      log.args.cpi.should.be.bignumber.eq(INITIAL_CPI);
+      log.args.dominus.should.be.bignumber.eq(INITIAL_CPI);
       log.args.requestedSupplyAdjustment.should.be.bignumber.eq(20);
     });
 

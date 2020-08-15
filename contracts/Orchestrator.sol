@@ -1,7 +1,7 @@
-pragma solidity 0.4.24;
+pragma solidity ^0.5.0;
 
-import "openzeppelin-eth/contracts/ownership/Ownable.sol";
-
+import "@openzeppelin/upgrades/contracts/Initializable.sol";
+import "@openzeppelin/upgrades/contracts/ownership/Ownable.sol";
 import "./UFragmentsPolicy.sol";
 
 
@@ -10,7 +10,7 @@ import "./UFragmentsPolicy.sol";
  * @notice The orchestrator is the main entry point for rebase operations. It coordinates the policy
  * actions with external consumers.
  */
-contract Orchestrator is Ownable {
+contract Orchestrator is OpenZeppelinUpgradesOwnable, Initializable {
 
     struct Transaction {
         bool enabled;
@@ -28,8 +28,12 @@ contract Orchestrator is Ownable {
     /**
      * @param policy_ Address of the UFragments policy.
      */
-    constructor(address policy_) public {
-        Ownable.initialize(msg.sender);
+    function initialize(address owner_, address policy_) 
+        public
+        initializer
+    {
+        OpenZeppelinUpgradesOwnable._transferOwnership(owner_);
+
         policy = UFragmentsPolicy(policy_);
     }
 
@@ -66,7 +70,7 @@ contract Orchestrator is Ownable {
      * @param destination Address of contract destination
      * @param data Transaction data payload
      */
-    function addTransaction(address destination, bytes data)
+    function addTransaction(address destination, bytes calldata data)
         external
         onlyOwner
     {
@@ -123,7 +127,7 @@ contract Orchestrator is Ownable {
      * @param data The encoded data payload.
      * @return True on success
      */
-    function externalCall(address destination, bytes data)
+    function externalCall(address destination, bytes memory data)
         internal
         returns (bool)
     {

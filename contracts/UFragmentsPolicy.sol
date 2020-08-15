@@ -1,16 +1,11 @@
-pragma solidity 0.4.24;
+pragma solidity ^0.5.0;
 
-import "openzeppelin-eth/contracts/math/SafeMath.sol";
-import "openzeppelin-eth/contracts/ownership/Ownable.sol";
-
+import "@openzeppelin/upgrades/contracts/Initializable.sol";
+import "@openzeppelin/upgrades/contracts/ownership/Ownable.sol";
 import "./lib/SafeMathInt.sol";
 import "./lib/UInt256Lib.sol";
 import "./UFragments.sol";
-
-
-interface IOracle {
-    function getData() external returns (uint256, bool);
-}
+import "./IOracle.sol";
 
 
 /**
@@ -22,7 +17,7 @@ interface IOracle {
  *      This component regulates the token supply of the uFragments ERC20 token in response to
  *      market oracles.
  */
-contract UFragmentsPolicy is Ownable {
+contract UFragmentsPolicy is OpenZeppelinUpgradesOwnable, Initializable {
     using SafeMath for uint256;
     using SafeMathInt for int256;
     using UInt256Lib for uint256;
@@ -30,22 +25,22 @@ contract UFragmentsPolicy is Ownable {
     event LogRebase(
         uint256 indexed epoch,
         uint256 exchangeRate,
-        uint256 cpi,
+        uint256 dominus,
         int256 requestedSupplyAdjustment,
         uint256 timestampSec
     );
 
     UFragments public uFrags;
 
-    // Provides the current CPI, as an 18 decimal fixed point number.
-    IOracle public cpiOracle;
+    // Provides the current BTC market dominance, as an 18 decimal fixed point number.
+    IOracle public dominusOracle;
 
     // Market oracle provides the token/USD exchange rate as an 18 decimal fixed point number.
     // (eg) An oracle value of 1.5e18 it would mean 1 Ample is trading for $1.50.
     IOracle public marketOracle;
 
-    // CPI value at the time of launch, as an 18 decimal fixed point number.
-    uint256 private baseCpi;
+    // Dominus value at the time of launch, as an 18 decimal fixed point number.
+    uint256 private baseDominus;
 
     // If the current exchange rate is within this fractional distance from the target, no supply
     // update is performed. Fixed point number--same format as the rate.
@@ -95,7 +90,7 @@ contract UFragmentsPolicy is Ownable {
      *
      * @dev The supply adjustment equals (_totalSupply * DeviationFromTargetRate) / rebaseLag
      *      Where DeviationFromTargetRate is (MarketOracleRate - targetRate) / targetRate
-     *      and targetRate is CpiOracleRate / baseCpi
+     *      and targetRate is DominusOracleRate / baseDominus
      */
     function rebase() external onlyOrchestrator {
         require(inRebaseWindow());
@@ -109,12 +104,12 @@ contract UFragmentsPolicy is Ownable {
 
         epoch = epoch.add(1);
 
-        uint256 cpi;
-        bool cpiValid;
-        (cpi, cpiValid) = cpiOracle.getData();
-        require(cpiValid);
+        uint256 dominus;
+        bool dominusValid;
+        (dominus, dominusValid) = dominusOracle.getData();
+        require(dominusValid);
 
-        uint256 targetRate = cpi.mul(10 ** DECIMALS).div(baseCpi);
+        uint256 targetRate = dominus.mul(10 ** DECIMALS).div(baseDominus);
 
         uint256 exchangeRate;
         bool rateValid;
@@ -136,18 +131,18 @@ contract UFragmentsPolicy is Ownable {
 
         uint256 supplyAfterRebase = uFrags.rebase(epoch, supplyDelta);
         assert(supplyAfterRebase <= MAX_SUPPLY);
-        emit LogRebase(epoch, exchangeRate, cpi, supplyDelta, now);
+        emit LogRebase(epoch, exchangeRate, dominus, supplyDelta, now);
     }
 
     /**
-     * @notice Sets the reference to the CPI oracle.
-     * @param cpiOracle_ The address of the cpi oracle contract.
+     * @notice Sets the reference to the Dominus oracle.
+     * @param dominusOracle_ The address of the dominus oracle contract.
      */
-    function setCpiOracle(IOracle cpiOracle_)
+    function setDominusOracle(IOracle dominusOracle_)
         external
         onlyOwner
     {
-        cpiOracle = cpiOracle_;
+        dominusOracle = dominusOracle_;
     }
 
     /**
@@ -233,11 +228,11 @@ contract UFragmentsPolicy is Ownable {
      *      It is called at the time of contract creation to invoke parent class initializers and
      *      initialize the contract's state variables.
      */
-    function initialize(address owner_, UFragments uFrags_, uint256 baseCpi_)
+    function initialize(address owner_, UFragments uFrags_, uint256 baseDominus_)
         public
         initializer
     {
-        Ownable.initialize(owner_);
+        OpenZeppelinUpgradesOwnable._transferOwnership(owner_);
 
         // deviationThreshold = 0.05e18 = 5e16
         deviationThreshold = 5 * 10 ** (DECIMALS-2);
@@ -250,7 +245,7 @@ contract UFragmentsPolicy is Ownable {
         epoch = 0;
 
         uFrags = uFrags_;
-        baseCpi = baseCpi_;
+        baseDominus = baseDominus_;
     }
 
     /**

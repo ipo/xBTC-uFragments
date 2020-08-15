@@ -1,10 +1,9 @@
-pragma solidity 0.4.24;
+pragma solidity ^0.5.0;
 
-import "openzeppelin-eth/contracts/math/SafeMath.sol";
-import "openzeppelin-eth/contracts/ownership/Ownable.sol";
-import "openzeppelin-eth/contracts/token/ERC20/ERC20Detailed.sol";
-
+import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/upgrades/contracts/ownership/Ownable.sol";
 import "./lib/SafeMathInt.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
 
 
 /**
@@ -17,7 +16,7 @@ import "./lib/SafeMathInt.sol";
  *      We support splitting the currency in expansion and combining the currency on contraction by
  *      changing the exchange rate between the hidden 'gons' and the public 'fragments'.
  */
-contract UFragments is ERC20Detailed, Ownable {
+contract UFragments is ERC20Detailed, OpenZeppelinUpgradesOwnable {
     // PLEASE READ BEFORE CHANGING ANY ACCOUNTING OR MATH
     // Anytime there is division, there is a risk of numerical instability from rounding errors. In
     // order to minimize this risk, we adhere to the following guidelines:
@@ -39,6 +38,8 @@ contract UFragments is ERC20Detailed, Ownable {
     using SafeMathInt for int256;
 
     event LogRebase(uint256 indexed epoch, uint256 totalSupply);
+    event LogRebasePaused(bool paused);
+    event LogTokenPaused(bool paused);
     event LogMonetaryPolicyUpdated(address monetaryPolicy);
 
     // Used for authentication
@@ -49,8 +50,19 @@ contract UFragments is ERC20Detailed, Ownable {
         _;
     }
 
-    bool private rebasePausedDeprecated;
-    bool private tokenPausedDeprecated;
+    // Precautionary emergency controls.
+    bool public rebasePaused;
+    bool public tokenPaused;
+
+    modifier whenRebaseNotPaused() {
+        require(!rebasePaused);
+        _;
+    }
+
+    modifier whenTokenNotPaused() {
+        require(!tokenPaused);
+        _;
+    }
 
     modifier validRecipient(address to) {
         require(to != address(0x0));
@@ -89,6 +101,30 @@ contract UFragments is ERC20Detailed, Ownable {
     }
 
     /**
+     * @dev Pauses or unpauses the execution of rebase operations.
+     * @param paused Pauses rebase operations if this is true.
+     */
+    function setRebasePaused(bool paused)
+        external
+        onlyOwner
+    {
+        rebasePaused = paused;
+        emit LogRebasePaused(paused);
+    }
+
+    /**
+     * @dev Pauses or unpauses execution of ERC-20 transactions.
+     * @param paused Pauses ERC-20 transactions if this is true.
+     */
+    function setTokenPaused(bool paused)
+        external
+        onlyOwner
+    {
+        tokenPaused = paused;
+        emit LogTokenPaused(paused);
+    }
+
+    /**
      * @dev Notifies Fragments contract about a new rebase cycle.
      * @param supplyDelta The number of new fragment tokens to add into circulation via expansion.
      * @return The total number of fragments after the supply adjustment.
@@ -96,6 +132,7 @@ contract UFragments is ERC20Detailed, Ownable {
     function rebase(uint256 epoch, int256 supplyDelta)
         external
         onlyMonetaryPolicy
+        whenRebaseNotPaused
         returns (uint256)
     {
         if (supplyDelta == 0) {
@@ -130,15 +167,15 @@ contract UFragments is ERC20Detailed, Ownable {
         return _totalSupply;
     }
 
-    function initialize(address owner_)
+    function initialize(address owner_, string memory tokenName_, string memory tokenTicker_)
         public
         initializer
     {
-        ERC20Detailed.initialize("Ampleforth", "AMPL", uint8(DECIMALS));
-        Ownable.initialize(owner_);
+        ERC20Detailed.initialize(tokenName_, tokenTicker_, uint8(DECIMALS));
+        OpenZeppelinUpgradesOwnable._transferOwnership(owner_);
 
-        rebasePausedDeprecated = false;
-        tokenPausedDeprecated = false;
+        rebasePaused = false;
+        tokenPaused = false;
 
         _totalSupply = INITIAL_FRAGMENTS_SUPPLY;
         _gonBalances[owner_] = TOTAL_GONS;
@@ -179,6 +216,7 @@ contract UFragments is ERC20Detailed, Ownable {
     function transfer(address to, uint256 value)
         public
         validRecipient(to)
+        whenTokenNotPaused
         returns (bool)
     {
         uint256 gonValue = value.mul(_gonsPerFragment);
@@ -211,6 +249,7 @@ contract UFragments is ERC20Detailed, Ownable {
     function transferFrom(address from, address to, uint256 value)
         public
         validRecipient(to)
+        whenTokenNotPaused
         returns (bool)
     {
         _allowedFragments[from][msg.sender] = _allowedFragments[from][msg.sender].sub(value);
@@ -236,6 +275,7 @@ contract UFragments is ERC20Detailed, Ownable {
      */
     function approve(address spender, uint256 value)
         public
+        whenTokenNotPaused
         returns (bool)
     {
         _allowedFragments[msg.sender][spender] = value;
@@ -252,6 +292,7 @@ contract UFragments is ERC20Detailed, Ownable {
      */
     function increaseAllowance(address spender, uint256 addedValue)
         public
+        whenTokenNotPaused
         returns (bool)
     {
         _allowedFragments[msg.sender][spender] =
@@ -268,6 +309,7 @@ contract UFragments is ERC20Detailed, Ownable {
      */
     function decreaseAllowance(address spender, uint256 subtractedValue)
         public
+        whenTokenNotPaused
         returns (bool)
     {
         uint256 oldValue = _allowedFragments[msg.sender][spender];
