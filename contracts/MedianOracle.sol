@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity 0.5.17;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/upgrades/contracts/Initializable.sol";
@@ -42,37 +42,11 @@ contract MedianOracle is OpenZeppelinUpgradesOwnable, Initializable, IOracle {
 
     // The minimum number of providers with valid reports to consider the
     // aggregate report valid.
-    uint256 public minimumProviders = 1;
+    uint256 public minimumProviders;
 
     // Timestamp of 1 is used to mark uninitialized and invalidated data.
     // This is needed so that timestamp of 1 is always considered expired.
-    uint256 private constant MAX_REPORT_EXPIRATION_TIME = 520 weeks;
-
-    /**
-    * @param reportExpirationTimeSec_ The number of seconds after which the
-    *                                 report is deemed expired.
-    * @param reportDelaySec_ The number of seconds since reporting that has to
-    *                        pass before a report is usable
-    * @param minimumProviders_ The minimum number of providers with valid
-    *                          reports to consider the aggregate report valid.
-    */
-    function initialize(
-            address owner_,
-            uint256 reportExpirationTimeSec_,
-            uint256 reportDelaySec_,
-            uint256 minimumProviders_
-        )
-        public
-        initializer
-    {
-        OpenZeppelinUpgradesOwnable._transferOwnership(owner_);
-
-        require(reportExpirationTimeSec_ <= MAX_REPORT_EXPIRATION_TIME);
-        require(minimumProviders_ > 0);
-        reportExpirationTimeSec = reportExpirationTimeSec_;
-        reportDelaySec = reportDelaySec_;
-        minimumProviders = minimumProviders_;
-    }
+    uint256 private maxReportExpirationTime;
 
      /**
      * @notice Sets the report expiration period.
@@ -83,7 +57,7 @@ contract MedianOracle is OpenZeppelinUpgradesOwnable, Initializable, IOracle {
         external
         onlyOwner
     {
-        require(reportExpirationTimeSec_ <= MAX_REPORT_EXPIRATION_TIME);
+        require(reportExpirationTimeSec_ <= maxReportExpirationTime);
         reportExpirationTimeSec = reportExpirationTimeSec_;
     }
 
@@ -124,14 +98,14 @@ contract MedianOracle is OpenZeppelinUpgradesOwnable, Initializable, IOracle {
 
         require(timestamps[0] > 0);
 
-        uint8 index_recent = timestamps[0] >= timestamps[1] ? 0 : 1;
-        uint8 index_past = 1 - index_recent;
+        uint8 indexRecent = timestamps[0] >= timestamps[1] ? 0 : 1;
+        uint8 indexPast = 1 - indexRecent;
 
         // Check that the push is not too soon after the last one.
-        require(timestamps[index_recent].add(reportDelaySec) <= now);
+        require(timestamps[indexRecent].add(reportDelaySec) <= now);
 
-        reports[index_past].timestamp = now;
-        reports[index_past].payload = payload;
+        reports[indexPast].timestamp = now;
+        reports[indexPast].payload = payload;
 
         emit ProviderReportPushed(providerAddress, payload, now);
     }
@@ -142,9 +116,9 @@ contract MedianOracle is OpenZeppelinUpgradesOwnable, Initializable, IOracle {
     function purgeReports() external
     {
         address providerAddress = msg.sender;
-        require (providerReports[providerAddress][0].timestamp > 0);
-        providerReports[providerAddress][0].timestamp=1;
-        providerReports[providerAddress][1].timestamp=1;
+        require(providerReports[providerAddress][0].timestamp > 0);
+        providerReports[providerAddress][0].timestamp = 1;
+        providerReports[providerAddress][1].timestamp = 1;
     }
 
     /**
@@ -167,12 +141,13 @@ contract MedianOracle is OpenZeppelinUpgradesOwnable, Initializable, IOracle {
             address providerAddress = providers[i];
             Report[2] memory reports = providerReports[providerAddress];
 
-            uint8 index_recent = reports[0].timestamp >= reports[1].timestamp ? 0 : 1;
-            uint8 index_past = 1 - index_recent;
-            uint256 reportTimestampRecent = reports[index_recent].timestamp;
+            uint8 indexRecent = reports[0].timestamp >= reports[1].timestamp ? 0 : 1;
+            uint8 indexPast = 1 - indexRecent;
+            uint256 reportTimestampRecent = reports[indexRecent].timestamp;
             if (reportTimestampRecent > maxValidTimestamp) {
                 // Recent report is too recent.
-                uint256 reportTimestampPast = providerReports[providerAddress][index_past].timestamp;
+                uint256 reportTimestampPast = providerReports[providerAddress][indexPast].
+                    timestamp;
                 if (reportTimestampPast < minValidTimestamp) {
                     // Past report is too old.
                     emit ReportTimestampOutOfRange(providerAddress);
@@ -181,7 +156,7 @@ contract MedianOracle is OpenZeppelinUpgradesOwnable, Initializable, IOracle {
                     emit ReportTimestampOutOfRange(providerAddress);
                 } else {
                     // Using past report.
-                    validReports[size++] = providerReports[providerAddress][index_past].payload;
+                    validReports[size++] = providerReports[providerAddress][indexPast].payload;
                 }
             } else {
                 // Recent report is not too recent.
@@ -190,7 +165,7 @@ contract MedianOracle is OpenZeppelinUpgradesOwnable, Initializable, IOracle {
                     emit ReportTimestampOutOfRange(providerAddress);
                 } else {
                     // Using recent report.
-                    validReports[size++] = providerReports[providerAddress][index_recent].payload;
+                    validReports[size++] = providerReports[providerAddress][indexRecent].payload;
                 }
             }
         }
@@ -227,7 +202,7 @@ contract MedianOracle is OpenZeppelinUpgradesOwnable, Initializable, IOracle {
         delete providerReports[provider];
         for (uint256 i = 0; i < providers.length; i++) {
             if (providers[i] == provider) {
-                if (i + 1  != providers.length) {
+                if (i + 1 != providers.length) {
                     providers[i] = providers[providers.length-1];
                 }
                 providers.length--;
@@ -246,6 +221,36 @@ contract MedianOracle is OpenZeppelinUpgradesOwnable, Initializable, IOracle {
         returns (uint256)
     {
         return providers.length;
+    }
+
+    /**
+    * @param reportExpirationTimeSec_ The number of seconds after which the
+    *                                 report is deemed expired.
+    * @param reportDelaySec_ The number of seconds since reporting that has to
+    *                        pass before a report is usable
+    * @param minimumProviders_ The minimum number of providers with valid
+    *                          reports to consider the aggregate report valid.
+    */
+    function initialize(
+            address owner_,
+            uint256 reportExpirationTimeSec_,
+            uint256 reportDelaySec_,
+            uint256 minimumProviders_
+        )
+        public
+        initializer
+    {
+        OpenZeppelinUpgradesOwnable._transferOwnership(owner_);
+
+        require(reportExpirationTimeSec_ <= maxReportExpirationTime);
+        require(minimumProviders_ > 0);
+
+        reportExpirationTimeSec = reportExpirationTimeSec_;
+        reportDelaySec = reportDelaySec_;
+        minimumProviders = minimumProviders_;
+
+        minimumProviders = 1;
+        maxReportExpirationTime = 520 weeks;
     }
 }
 

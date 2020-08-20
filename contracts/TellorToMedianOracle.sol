@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity 0.5.17;
 
 import "./MedianOracle.sol";
 
@@ -9,7 +9,7 @@ interface ITellor {
     * @return value for timestamp of last proof of work submited
     * @return true if the is a timestamp for the lastNewValue
     */
-    function getLastNewValueById(uint256 id) external view returns(uint,bool);
+    function getLastNewValueById(uint256 id) external view returns(uint, bool);
 }
 
 
@@ -19,8 +19,8 @@ contract TellorToMedianOracle is OpenZeppelinUpgradesOwnable, Initializable {
     ITellor public tellor;
     MedianOracle public medianOracle;
     
-    uint256 tellorDecimals;
-    uint256 tellorId;
+    uint256 public tellorDecimals;
+    uint256 public tellorId;
 
     event ProviderAdded(address provider);
     event ProviderRemoved(address provider);
@@ -34,25 +34,6 @@ contract TellorToMedianOracle is OpenZeppelinUpgradesOwnable, Initializable {
     modifier onlyProviders() {
         require(providers[msg.sender]);
         _;
-    }
-
-    function initialize(
-            address owner_,
-            ITellor tellor_,
-            MedianOracle medianOracle_,
-            uint256 tellorDecimals_,
-            uint256 tellorId_
-        )
-        public
-        initializer
-    {
-        OpenZeppelinUpgradesOwnable._transferOwnership(owner_);
-
-        require(tellorDecimals_ <= 18);
-        tellor = tellor_;
-        medianOracle = medianOracle_;
-        tellorDecimals = tellorDecimals_;
-        tellorId = tellorId_;
     }
 
     /**
@@ -101,5 +82,24 @@ contract TellorToMedianOracle is OpenZeppelinUpgradesOwnable, Initializable {
             providers[provider] = false;
             emit ProviderRemoved(provider);
         }
+    }
+
+    function initialize(
+            address owner_,
+            ITellor tellor_,
+            MedianOracle medianOracle_,
+            uint256 tellorDecimals_,
+            uint256 tellorId_
+        )
+        public
+        initializer
+    {
+        OpenZeppelinUpgradesOwnable._transferOwnership(owner_);
+
+        require(tellorDecimals_ <= 18);
+        tellor = tellor_;
+        medianOracle = medianOracle_;
+        tellorDecimals = tellorDecimals_;
+        tellorId = tellorId_;
     }
 }

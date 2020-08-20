@@ -19,9 +19,9 @@
   "author": "dev-support@ampleforth.org",
   "scripts": {
     "precommit": "./scripts/pre-commit.sh",
-    "coverage": "npx frg-coverage",
-    "lint": "npx eslint ./scripts ./test ./util *.js --cache --fix && npx solhint ./contracts/*.sol ./contracts/*/*.sol",
-    "setup-ganache": "npx start-chain ganacheUnitTest && npm run deploy-contracts ganacheUnitTest",
+    "coverage": "yarn frg-coverage",
+    "lint": "yarn eslint ./scripts ./test ./util --cache --fix && yarn solhint ./contracts/*.sol ./contracts/*/*.sol",
+    "setup-ganache": "yarn start-chain ganacheUnitTest && yarn run deploy-contracts ganacheUnitTest",
     "test": "./scripts/test.sh"
   },
   "pre-commit": {
@@ -37,11 +37,13 @@
     "@openzeppelin/upgrades": "^2.8.0",
     "@truffle/hdwallet-provider": "^1.0.42",
     "app-root-path": "2.1.0",
+    "bignumber.js": "5.0.0",
     "frg-ethereum-runners": "https://github.com/ampleforth/frg-ethereum-runners.git#v1.0.0-alpha",
+    "ganache-cli": "^6.10.1",
     "js-yaml": "^3.13.1",
     "openzeppelin-eth": "2.0.2",
     "solc": "0.5.17",
-    "truffle": "4.1.14",
+    "truffle": "5.1.14",
     "truffle-hdwallet-provider-privkey": "^1.0.3",
     "zos": "^2.4.3"
   },

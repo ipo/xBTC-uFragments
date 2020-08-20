@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity 0.5.17;
 
 import "@openzeppelin/upgrades/contracts/Initializable.sol";
 import "@openzeppelin/upgrades/contracts/ownership/Ownable.sol";
@@ -24,18 +24,6 @@ contract Orchestrator is OpenZeppelinUpgradesOwnable, Initializable {
     Transaction[] public transactions;
 
     UFragmentsPolicy public policy;
-
-    /**
-     * @param policy_ Address of the UFragments policy.
-     */
-    function initialize(address owner_, address policy_) 
-        public
-        initializer
-    {
-        OpenZeppelinUpgradesOwnable._transferOwnership(owner_);
-
-        policy = UFragmentsPolicy(policy_);
-    }
 
     /**
      * @notice Main entry point to initiate a rebase operation.
@@ -119,6 +107,18 @@ contract Orchestrator is OpenZeppelinUpgradesOwnable, Initializable {
         returns (uint256)
     {
         return transactions.length;
+    }
+
+    /**
+     * @param policy_ Address of the UFragments policy.
+     */
+    function initialize(address owner_, address policy_) 
+        public
+        initializer
+    {
+        OpenZeppelinUpgradesOwnable._transferOwnership(owner_);
+
+        policy = UFragmentsPolicy(policy_);
     }
 
     /**
