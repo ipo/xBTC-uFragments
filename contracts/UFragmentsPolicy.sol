@@ -6,6 +6,7 @@ import "./lib/SafeMathInt.sol";
 import "./lib/UInt256Lib.sol";
 import "./UFragments.sol";
 import "./IOracle.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/math/Math.sol";
 
 
 /**
@@ -69,6 +70,10 @@ contract UFragmentsPolicy is OpenZeppelinUpgradesOwnable, Initializable {
     // The number of rebase cycles since inception
     uint256 public epoch;
 
+    // the maximum allowed rate changes, between 0-100
+    uint256 public maxPositiveRateChangePercentage;
+    uint256 public maxNegativeRateChangePercentage;
+
     uint256 private constant DECIMALS = 18;
 
     // Due to the expression in computeSupplyDelta(), MAX_RATE * MAX_SUPPLY must fit into an int256.
@@ -124,6 +129,17 @@ contract UFragmentsPolicy is OpenZeppelinUpgradesOwnable, Initializable {
 
         // Apply the Dampening factor.
         supplyDelta = supplyDelta.div(rebaseLag.toInt256Safe());
+
+        // cap delta
+        uint256 totalSupply = uFrags.totalSupply();
+        supplyDelta = smin(
+            supplyDelta, 
+            totalSupply.mul(maxPositiveRateChangePercentage).div(100).toInt256Safe()
+        );
+        supplyDelta = smax(
+            supplyDelta, 
+            totalSupply.mul(maxNegativeRateChangePercentage).div(100).toInt256Safe().mul(-1)
+        );
 
         if (supplyDelta > 0 && uFrags.totalSupply().add(uint256(supplyDelta)) > MAX_SUPPLY) {
             supplyDelta = (MAX_SUPPLY.sub(uFrags.totalSupply())).toInt256Safe();
@@ -223,6 +239,18 @@ contract UFragmentsPolicy is OpenZeppelinUpgradesOwnable, Initializable {
         rebaseWindowLengthSec = rebaseWindowLengthSec_;
     }
 
+    function setRateChangeMaximums(
+        uint256 maxPositiveRateChangePercentage_, uint256 maxNegativeRateChangePercentage_
+        )
+        external
+        onlyOwner
+    {
+        require(maxPositiveRateChangePercentage_ > 0 && maxPositiveRateChangePercentage_ <= 10000);
+        maxPositiveRateChangePercentage = maxPositiveRateChangePercentage_;
+        require(maxNegativeRateChangePercentage_ > 0 && maxNegativeRateChangePercentage_ <= 100);
+        maxNegativeRateChangePercentage = maxNegativeRateChangePercentage_;
+    }
+
     /**
      * @dev ZOS upgradable contract initialization method.
      *      It is called at the time of contract creation to invoke parent class initializers and
@@ -246,6 +274,9 @@ contract UFragmentsPolicy is OpenZeppelinUpgradesOwnable, Initializable {
 
         uFrags = uFrags_;
         baseDominus = baseDominus_;
+
+        maxPositiveRateChangePercentage = 10000;
+        maxNegativeRateChangePercentage = 100;
     }
 
     /**
@@ -257,6 +288,20 @@ contract UFragmentsPolicy is OpenZeppelinUpgradesOwnable, Initializable {
             now.mod(minRebaseTimeIntervalSec) >= rebaseWindowOffsetSec &&
             now.mod(minRebaseTimeIntervalSec) < (rebaseWindowOffsetSec.add(rebaseWindowLengthSec))
         );
+    }
+
+    /**
+     * @dev Returns the largest of two numbers.
+     */
+    function smax(int256 a, int256 b) internal pure returns (int256) {
+        return a >= b ? a : b;
+    }
+
+    /**
+     * @dev Returns the smallest of two numbers.
+     */
+    function smin(int256 a, int256 b) internal pure returns (int256) {
+        return a < b ? a : b;
     }
 
     /**
