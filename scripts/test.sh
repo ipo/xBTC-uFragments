@@ -6,10 +6,13 @@ PROJECT_DIR=$DIR/../
 set -o errexit
 
 process-pid(){
+  #echo "process-pid"
+  #echo `lsof -t -i:$1`
   lsof -t -i:$1
 }
 
 run-unit-tests(){
+  echo "run-unit-tests"
   npx truffle \
     --network $1 \
     test \
@@ -17,6 +20,7 @@ run-unit-tests(){
 }
 
 run-simulation-tests(){
+  echo "run-simulation-tests"
   npx truffle \
     --network $1 \
     exec \
@@ -29,7 +33,11 @@ run-simulation-tests(){
 }
 
 run-all-tests(){
-  read REF PORT < <(npx get-network-config $1)
+  #read REF PORT < <(echo `npx get-network-config $1 | tail -2 | head -1`)
+  REF=$1
+  PORT=8545
+
+  echo "run-all-tests" $REF $PORT $1
 
   if [ $(process-pid $PORT) ]
   then
@@ -52,7 +60,8 @@ run-all-tests(){
   trap cleanup EXIT
 }
 
-npx truffle compile --reset
+rm -rf ./build/
+yarn run zos compile
 
 run-all-tests "ganacheUnitTest"
 

@@ -1,6 +1,6 @@
 const SafeMathIntMock = artifacts.require('SafeMathIntMock');
 
-const BigNumber = web3.BigNumber;
+const BigNumber = web3.utils.BN;
 const _require = require('app-root-path').require;
 const BlockchainCaller = _require('/util/blockchain_caller');
 const chain = new BlockchainCaller(web3);
@@ -10,8 +10,8 @@ require('chai')
   .should();
 
 contract('SafeMathInt', () => {
-  const MIN_INT256 = new BigNumber(-2).pow(255);
-  const MAX_INT256 = new BigNumber(2).pow(255).minus(1);
+  const MIN_INT256 = new BigNumber(-2).pow(new BigNumber(255));
+  const MAX_INT256 = new BigNumber(2).pow(new BigNumber(255)).sub(new BigNumber(1));
 
   let safeMathInt;
 
@@ -28,7 +28,7 @@ contract('SafeMathInt', () => {
       const a = new BigNumber(5678);
       const b = new BigNumber(1234);
 
-      (await returnVal(safeMathInt.add(a, b))).should.be.bignumber.eq(a.plus(b));
+      (await returnVal(safeMathInt.add(a, b))).toString().should.be.eq(a.add(b).toString());
     });
 
     it('should fail on addition overflow', async function () {
@@ -73,7 +73,7 @@ contract('SafeMathInt', () => {
       const a = new BigNumber(5678);
       const b = new BigNumber(1234);
 
-      (await returnVal(safeMathInt.sub(a, b))).should.be.bignumber.eq(a.minus(b));
+      (await returnVal(safeMathInt.sub(a, b))).toString().should.be.eq(a.sub(b).toString());
     });
 
     it('should fail on subtraction overflow', async function () {
@@ -100,14 +100,14 @@ contract('SafeMathInt', () => {
       const a = new BigNumber(1234);
       const b = new BigNumber(5678);
 
-      (await returnVal(safeMathInt.mul(a, b))).should.be.bignumber.eq(a.times(b));
+      (await returnVal(safeMathInt.mul(a, b))).toString().should.be.eq(a.mul(b).toString());
     });
 
     it('handles a zero product correctly', async function () {
       const a = new BigNumber(0);
       const b = new BigNumber(5678);
 
-      (await returnVal(safeMathInt.mul(a, b))).should.be.bignumber.eq(a.times(b));
+      (await returnVal(safeMathInt.mul(a, b))).toString().should.be.eq(a.mul(b).toString());
     });
 
     it('should fail on multiplication overflow', async function () {
@@ -152,7 +152,7 @@ contract('SafeMathInt', () => {
       const a = new BigNumber(5678);
       const b = new BigNumber(5678);
 
-      (await returnVal(safeMathInt.div(a, b))).should.be.bignumber.eq(a.div(b));
+      (await returnVal(safeMathInt.div(a, b))).toString().should.be.eq(a.div(b).toString());
     });
 
     it('should fail on zero division', async function () {
@@ -176,15 +176,15 @@ contract('SafeMathInt', () => {
 
   describe('abs', function () {
     it('works for 0', async function () {
-      (await returnVal(safeMathInt.abs(0))).should.be.bignumber.eq(0);
+      (await returnVal(safeMathInt.abs(0))).toString().should.be.eq('0');
     });
 
     it('works on positive numbers', async function () {
-      (await returnVal(safeMathInt.abs(100))).should.be.bignumber.eq(100);
+      (await returnVal(safeMathInt.abs(100))).toString().should.be.eq('100');
     });
 
     it('works on negative numbers', async function () {
-      (await returnVal(safeMathInt.abs(-100))).should.be.bignumber.eq(100);
+      (await returnVal(safeMathInt.abs(-100))).toString().should.be.eq('100');
     });
 
     it('fails on overflow condition', async function () {

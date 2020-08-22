@@ -15,9 +15,9 @@ const _require = require('app-root-path').require;
 const BlockchainCaller = _require('/util/blockchain_caller');
 const chain = new BlockchainCaller(web3);
 const encodeCall = require('zos-lib/lib/helpers/encodeCall').default;
-const BigNumber = web3.BigNumber;
+const BigNumber = web3.utils.BN;
 
-const endSupply = new BigNumber(2).pow(128).minus(1);
+const endSupply = new BigNumber(2).pow(new BigNumber(128)).sub(new BigNumber(1));
 
 let uFragments, preRebaseSupply, postRebaseSupply;
 preRebaseSupply = new BigNumber(0);
@@ -28,7 +28,7 @@ async function exec () {
   const deployer = accounts[0];
   uFragments = await UFragments.new();
   await uFragments.sendTransaction({
-    data: encodeCall('initialize', ['address'], [deployer]),
+    data: encodeCall('initialize', ['address', 'string', 'string'], [deployer, 'xBTC', 'xBTC']),
     from: deployer
   });
   await uFragments.setMonetaryPolicy(deployer, {from: deployer});
@@ -44,7 +44,7 @@ async function exec () {
     console.log('Total supply is now', postRebaseSupply.toString(), 'AMPL');
 
     console.log('Testing precision of supply');
-    expect(postRebaseSupply.minus(preRebaseSupply).toNumber()).to.eq(1);
+    expect(postRebaseSupply.sub(preRebaseSupply).toNumber()).to.eq(1);
 
     console.log('Doubling supply');
     await uFragments.rebase(2 * i + 1, postRebaseSupply, {from: deployer});

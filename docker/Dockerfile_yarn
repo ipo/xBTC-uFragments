@@ -28,7 +28,7 @@ RUN apt-get install -y sudo lsof make
 RUN pip3 install arrow
 
 #RUN yarn add truffle && yarn run truffle init
-CMD yarn run zos compile && yarn lint && yarn run zos check && yarn test
+CMD yarn run zos compile && yarn lint && yarn run zos check && yarn truffle test
 
 WORKDIR /code/
 ADD yarn.lock package.json /code/

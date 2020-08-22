@@ -21,9 +21,9 @@ const BlockchainCaller = _require('/util/blockchain_caller');
 const chain = new BlockchainCaller(web3);
 const encodeCall = require('zos-lib/lib/helpers/encodeCall').default;
 const Stochasm = require('stochasm');
-const BigNumber = web3.BigNumber;
+const BigNumber = web3.utils.BN;
 
-const endSupply = new BigNumber(2).pow(128).minus(1);
+const endSupply = new BigNumber(2).pow(new BigNumber(128)).sub(new BigNumber(1));
 const uFragmentsGrowth = new Stochasm({ min: -0.5, max: 2.5, seed: 'fragments.org' });
 
 let uFragments, rebaseAmt, inflation, preRebaseSupply, postRebaseSupply;
@@ -53,11 +53,11 @@ async function checkBalancesAfterTransfer (users, tAmt) {
   await checkBalancesAfterOperation(users, async function () {
     await uFragments.transfer(users[1], tAmt, { from: users[0] });
   }, function ([_u0Bal, _u1Bal], [u0Bal, u1Bal]) {
-    const _sum = _u0Bal.plus(_u1Bal);
-    const sum = u0Bal.plus(u1Bal);
+    const _sum = _u0Bal.add(_u1Bal);
+    const sum = u0Bal.add(u1Bal);
     expect(_sum.eq(sum)).to.be.true;
-    expect(_u0Bal.minus(tAmt).eq(u0Bal)).to.be.true;
-    expect(_u1Bal.plus(tAmt).eq(u1Bal)).to.be.true;
+    expect(_u0Bal.sub(tAmt).eq(u0Bal)).to.be.true;
+    expect(_u1Bal.add(tAmt).eq(u1Bal)).to.be.true;
   });
 }
 
@@ -67,7 +67,7 @@ async function exec () {
   const user = accounts[1];
   uFragments = await UFragments.new();
   await uFragments.sendTransaction({
-    data: encodeCall('initialize', ['address'], [deployer]),
+    data: encodeCall('initialize', ['address', 'string', 'string'], [deployer, 'xBTC', 'xBTC']),
     from: deployer
   });
   await uFragments.setMonetaryPolicy(deployer, {from: deployer});
@@ -94,7 +94,7 @@ async function exec () {
     preRebaseSupply = await uFragments.totalSupply.call();
     inflation = uFragmentsGrowth.next().toFixed(5);
     rebaseAmt = preRebaseSupply.mul(inflation).dividedToIntegerBy(1);
-  } while ((await uFragments.totalSupply.call()).plus(rebaseAmt).lt(endSupply));
+  } while ((await uFragments.totalSupply.call()).add(rebaseAmt).lt(endSupply));
 }
 
 module.exports = function (done) {

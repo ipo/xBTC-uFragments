@@ -30,7 +30,7 @@ const UFragments = artifacts.require('UFragments.sol');
 const _require = require('app-root-path').require;
 const BlockchainCaller = _require('/util/blockchain_caller');
 const chain = new BlockchainCaller(web3);
-const BigNumber = web3.BigNumber;
+const BigNumber = web3.utils.BN;
 const encodeCall = require('zos-lib/lib/helpers/encodeCall').default;
 
 require('chai')
@@ -39,17 +39,17 @@ require('chai')
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 function toTokenDenomination (x) {
-  return new BigNumber(x).mul(10 ** DECIMALS);
+  return new BigNumber(x).mul(new BigNumber(10 ** DECIMALS));
 }
 const DECIMALS = 9;
 const INITIAL_SUPPLY = toTokenDenomination(50 * 10 ** 6);
 const transferAmount = toTokenDenomination(10);
 const unitTokenAmount = toTokenDenomination(1);
-const overdraftAmount = INITIAL_SUPPLY.plus(unitTokenAmount);
-const overdraftAmountPlusOne = overdraftAmount.plus(unitTokenAmount);
-const overdraftAmountMinusOne = overdraftAmount.minus(unitTokenAmount);
-const transferAmountPlusOne = transferAmount.plus(unitTokenAmount);
-const transferAmountMinusOne = transferAmount.minus(unitTokenAmount);
+const overdraftAmount = INITIAL_SUPPLY.add(unitTokenAmount);
+const overdraftAmountPlusOne = overdraftAmount.add(unitTokenAmount);
+const overdraftAmountMinusOne = overdraftAmount.sub(unitTokenAmount);
+const transferAmountPlusOne = transferAmount.add(unitTokenAmount);
+const transferAmountMinusOne = transferAmount.sub(unitTokenAmount);
 
 let token, owner, anotherAccount, recipient, r;
 async function setupContractAndAccounts (accounts) {
@@ -58,7 +58,7 @@ async function setupContractAndAccounts (accounts) {
   recipient = accounts[9];
   token = await UFragments.new();
   await token.sendTransaction({
-    data: encodeCall('initialize', ['address'], [owner]),
+    data: encodeCall('initialize', ['address', 'string', 'string'], [owner, 'xBTC', 'xBTC']),
     from: owner
   });
 }
@@ -70,20 +70,20 @@ contract('UFragments:ERC20', function (accounts) {
 
   describe('totalSupply', function () {
     it('returns the total amount of tokens', async function () {
-      (await token.totalSupply.call()).should.be.bignumber.eq(INITIAL_SUPPLY);
+      (await token.totalSupply.call()).toString().should.be.eq(INITIAL_SUPPLY.toString());
     });
   });
 
   describe('balanceOf', function () {
     describe('when the requested account has no tokens', function () {
       it('returns zero', async function () {
-        (await token.balanceOf.call(anotherAccount)).should.be.bignumber.eq(0);
+        (await token.balanceOf.call(anotherAccount)).toString().should.be.eq('0');
       });
     });
 
     describe('when the requested account has some tokens', function () {
       it('returns the total amount of tokens', async function () {
-        (await token.balanceOf.call(owner)).should.be.bignumber.eq(INITIAL_SUPPLY);
+        (await token.balanceOf.call(owner)).toString().should.be.eq(INITIAL_SUPPLY.toString());
       });
     });
   });
@@ -111,15 +111,15 @@ contract('UFragments:ERC20:transfer', function (accounts) {
       const senderBalance = await token.balanceOf.call(owner);
       const recipientBalance = await token.balanceOf.call(recipient);
       const supply = await token.totalSupply.call();
-      supply.minus(transferAmount).should.be.bignumber.eq(senderBalance);
-      recipientBalance.should.be.bignumber.eq(transferAmount);
+      supply.sub(transferAmount).toString().should.be.eq(senderBalance.toString());
+      recipientBalance.toString().should.be.eq(transferAmount.toString());
     });
     it('should emit a transfer event', async function () {
       expect(r.logs.length).to.eq(1);
       expect(r.logs[0].event).to.eq('Transfer');
       expect(r.logs[0].args.from).to.eq(owner);
       expect(r.logs[0].args.to).to.eq(recipient);
-      r.logs[0].args.value.should.be.bignumber.eq(transferAmount);
+      r.logs[0].args.value.toString().should.be.eq(transferAmount.toString());
     });
   });
 
@@ -178,18 +178,18 @@ contract('UFragments:ERC20:transferFrom', function (accounts) {
       it('transfers the requested amount', async function () {
         const senderBalance = await token.balanceOf.call(owner);
         const recipientBalance = await token.balanceOf.call(recipient);
-        prevSenderBalance.minus(transferAmount).should.be.bignumber.eq(senderBalance);
-        recipientBalance.should.be.bignumber.eq(transferAmount);
+        prevSenderBalance.sub(transferAmount).toString().should.be.eq(senderBalance.toString());
+        recipientBalance.toString().should.be.eq(transferAmount.toString());
       });
       it('decreases the spender allowance', async function () {
-        expect((await token.allowance(owner, anotherAccount)).eq(0)).to.be.true;
+        expect((await token.allowance(owner, anotherAccount)).toString().should.be.eq('0'));
       });
       it('emits a transfer event', async function () {
         expect(r.logs.length).to.eq(1);
         expect(r.logs[0].event).to.eq('Transfer');
         expect(r.logs[0].args.from).to.eq(owner);
         expect(r.logs[0].args.to).to.eq(recipient);
-        r.logs[0].args.value.should.be.bignumber.eq(transferAmount);
+        r.logs[0].args.value.toString().should.be.eq(transferAmount.toString());
       });
     });
   });
@@ -209,7 +209,7 @@ contract('UFragments:ERC20:approve', function (accounts) {
         });
 
         it('approves the requested amount', async function () {
-          (await token.allowance(owner, anotherAccount)).should.be.bignumber.eq(transferAmount);
+          (await token.allowance(owner, anotherAccount)).toString().should.be.eq(transferAmount.toString());
         });
 
         it('emits an approval event', async function () {
@@ -217,7 +217,7 @@ contract('UFragments:ERC20:approve', function (accounts) {
           expect(r.logs[0].event).to.eq('Approval');
           expect(r.logs[0].args.owner).to.eq(owner);
           expect(r.logs[0].args.spender).to.eq(anotherAccount);
-          r.logs[0].args.value.should.be.bignumber.eq(transferAmount);
+          r.logs[0].args.value.toString().should.be.eq(transferAmount.toString());
         });
       });
 
@@ -228,7 +228,7 @@ contract('UFragments:ERC20:approve', function (accounts) {
         });
 
         it('approves the requested amount and replaces the previous one', async function () {
-          (await token.allowance(owner, anotherAccount)).should.be.bignumber.eq(transferAmount);
+          (await token.allowance(owner, anotherAccount)).toString().should.be.eq(transferAmount.toString());
         });
 
         it('emits an approval event', async function () {
@@ -236,7 +236,7 @@ contract('UFragments:ERC20:approve', function (accounts) {
           expect(r.logs[0].event).to.eq('Approval');
           expect(r.logs[0].args.owner).to.eq(owner);
           expect(r.logs[0].args.spender).to.eq(anotherAccount);
-          r.logs[0].args.value.should.be.bignumber.eq(transferAmount);
+          r.logs[0].args.value.toString().should.be.eq(transferAmount.toString());
         });
       });
     });
@@ -249,7 +249,7 @@ contract('UFragments:ERC20:approve', function (accounts) {
         });
 
         it('approves the requested amount', async function () {
-          (await token.allowance(owner, anotherAccount)).should.be.bignumber.eq(overdraftAmount);
+          (await token.allowance(owner, anotherAccount)).toString().should.be.eq(overdraftAmount.toString());
         });
 
         it('emits an approval event', async function () {
@@ -257,7 +257,7 @@ contract('UFragments:ERC20:approve', function (accounts) {
           expect(r.logs[0].event).to.eq('Approval');
           expect(r.logs[0].args.owner).to.eq(owner);
           expect(r.logs[0].args.spender).to.eq(anotherAccount);
-          r.logs[0].args.value.should.be.bignumber.eq(overdraftAmount);
+          r.logs[0].args.value.toString().should.be.eq(overdraftAmount.toString());
         });
       });
 
@@ -268,7 +268,7 @@ contract('UFragments:ERC20:approve', function (accounts) {
         });
 
         it('approves the requested amount', async function () {
-          (await token.allowance(owner, anotherAccount)).should.be.bignumber.eq(overdraftAmount);
+          (await token.allowance(owner, anotherAccount)).toString().should.be.eq(overdraftAmount.toString());
         });
 
         it('emits an approval event', async function () {
@@ -276,7 +276,7 @@ contract('UFragments:ERC20:approve', function (accounts) {
           expect(r.logs[0].event).to.eq('Approval');
           expect(r.logs[0].args.owner).to.eq(owner);
           expect(r.logs[0].args.spender).to.eq(anotherAccount);
-          r.logs[0].args.value.should.be.bignumber.eq(overdraftAmount);
+          r.logs[0].args.value.toString().should.be.eq(overdraftAmount.toString());
         });
       });
     });
@@ -296,7 +296,7 @@ contract('UFragments:ERC20:increaseAllowance', function (accounts) {
           r = await token.increaseAllowance(anotherAccount, transferAmount, { from: owner });
         });
         it('approves the requested amount', async function () {
-          (await token.allowance(owner, anotherAccount)).should.be.bignumber.eq(transferAmount);
+          (await token.allowance(owner, anotherAccount)).toString().should.be.eq(transferAmount.toString());
         });
 
         it('emits an approval event', async function () {
@@ -304,7 +304,7 @@ contract('UFragments:ERC20:increaseAllowance', function (accounts) {
           expect(r.logs[0].event).to.eq('Approval');
           expect(r.logs[0].args.owner).to.eq(owner);
           expect(r.logs[0].args.spender).to.eq(anotherAccount);
-          r.logs[0].args.value.should.be.bignumber.eq(transferAmount);
+          r.logs[0].args.value.toString().should.be.eq(transferAmount.toString());
         });
       });
 
@@ -315,7 +315,7 @@ contract('UFragments:ERC20:increaseAllowance', function (accounts) {
         });
 
         it('increases the spender allowance adding the requested amount', async function () {
-          (await token.allowance(owner, anotherAccount)).should.be.bignumber.eq(transferAmountPlusOne);
+          (await token.allowance(owner, anotherAccount)).toString().should.be.eq(transferAmountPlusOne.toString());
         });
 
         it('emits an approval event', async function () {
@@ -323,7 +323,7 @@ contract('UFragments:ERC20:increaseAllowance', function (accounts) {
           expect(r.logs[0].event).to.eq('Approval');
           expect(r.logs[0].args.owner).to.eq(owner);
           expect(r.logs[0].args.spender).to.eq(anotherAccount);
-          r.logs[0].args.value.should.be.bignumber.eq(transferAmountPlusOne);
+          r.logs[0].args.value.toString().should.be.eq(transferAmountPlusOne.toString());
         });
       });
     });
@@ -336,7 +336,7 @@ contract('UFragments:ERC20:increaseAllowance', function (accounts) {
         });
 
         it('approves the requested amount', async function () {
-          (await token.allowance(owner, anotherAccount)).should.be.bignumber.eq(overdraftAmount);
+          (await token.allowance(owner, anotherAccount)).toString().should.be.eq(overdraftAmount.toString());
         });
 
         it('emits an approval event', async function () {
@@ -344,7 +344,7 @@ contract('UFragments:ERC20:increaseAllowance', function (accounts) {
           expect(r.logs[0].event).to.eq('Approval');
           expect(r.logs[0].args.owner).to.eq(owner);
           expect(r.logs[0].args.spender).to.eq(anotherAccount);
-          r.logs[0].args.value.should.be.bignumber.eq(overdraftAmount);
+          r.logs[0].args.value.toString().should.be.eq(overdraftAmount.toString());
         });
       });
 
@@ -355,7 +355,7 @@ contract('UFragments:ERC20:increaseAllowance', function (accounts) {
         });
 
         it('increases the spender allowance adding the requested amount', async function () {
-          (await token.allowance(owner, anotherAccount)).should.be.bignumber.eq(overdraftAmountPlusOne);
+          (await token.allowance(owner, anotherAccount)).toString().should.be.eq(overdraftAmountPlusOne.toString());
         });
 
         it('emits an approval event', async function () {
@@ -363,7 +363,7 @@ contract('UFragments:ERC20:increaseAllowance', function (accounts) {
           expect(r.logs[0].event).to.eq('Approval');
           expect(r.logs[0].args.owner).to.eq(owner);
           expect(r.logs[0].args.spender).to.eq(anotherAccount);
-          r.logs[0].args.value.should.be.bignumber.eq(overdraftAmountPlusOne);
+          r.logs[0].args.value.toString().should.be.eq(overdraftAmountPlusOne.toString());
         });
       });
     });
@@ -383,7 +383,7 @@ contract('UFragments:ERC20:decreaseAllowance', function (accounts) {
         });
 
         it('keeps the allowance to zero', async function () {
-          (await token.allowance(owner, anotherAccount)).should.be.bignumber.eq(0);
+          (await token.allowance(owner, anotherAccount)).toString().should.be.eq('0');
         });
 
         it('emits an approval event', async function () {
@@ -391,7 +391,7 @@ contract('UFragments:ERC20:decreaseAllowance', function (accounts) {
           expect(r.logs[0].event).to.eq('Approval');
           expect(r.logs[0].args.owner).to.eq(owner);
           expect(r.logs[0].args.spender).to.eq(anotherAccount);
-          r.logs[0].args.value.should.be.bignumber.eq(0);
+          r.logs[0].args.value.toString().should.be.eq('0');
         });
       });
 
@@ -402,7 +402,7 @@ contract('UFragments:ERC20:decreaseAllowance', function (accounts) {
         });
 
         it('decreases the spender allowance subtracting the requested amount', async function () {
-          (await token.allowance(owner, anotherAccount)).should.be.bignumber.eq(unitTokenAmount);
+          (await token.allowance(owner, anotherAccount)).toString().should.be.eq(unitTokenAmount.toString());
         });
 
         it('emits an approval event', async function () {
@@ -410,7 +410,7 @@ contract('UFragments:ERC20:decreaseAllowance', function (accounts) {
           expect(r.logs[0].event).to.eq('Approval');
           expect(r.logs[0].args.owner).to.eq(owner);
           expect(r.logs[0].args.spender).to.eq(anotherAccount);
-          r.logs[0].args.value.should.be.bignumber.eq(unitTokenAmount);
+          r.logs[0].args.value.toString().should.be.eq(unitTokenAmount.toString());
         });
       });
     });
@@ -423,7 +423,7 @@ contract('UFragments:ERC20:decreaseAllowance', function (accounts) {
         });
 
         it('keeps the allowance to zero', async function () {
-          (await token.allowance(owner, anotherAccount)).should.be.bignumber.eq(0);
+          (await token.allowance(owner, anotherAccount)).toString().should.be.eq('0');
         });
 
         it('emits an approval event', async function () {
@@ -431,7 +431,7 @@ contract('UFragments:ERC20:decreaseAllowance', function (accounts) {
           expect(r.logs[0].event).to.eq('Approval');
           expect(r.logs[0].args.owner).to.eq(owner);
           expect(r.logs[0].args.spender).to.eq(anotherAccount);
-          r.logs[0].args.value.should.be.bignumber.eq(0);
+          r.logs[0].args.value.toString().should.be.eq('0');
         });
       });
 
@@ -442,7 +442,7 @@ contract('UFragments:ERC20:decreaseAllowance', function (accounts) {
         });
 
         it('decreases the spender allowance subtracting the requested amount', async function () {
-          (await token.allowance(owner, anotherAccount)).should.be.bignumber.eq(unitTokenAmount);
+          ((await token.allowance(owner, anotherAccount)).toString()).should.be.eq(unitTokenAmount.toString());
         });
 
         it('emits an approval event', async function () {
@@ -450,7 +450,7 @@ contract('UFragments:ERC20:decreaseAllowance', function (accounts) {
           expect(r.logs[0].event).to.eq('Approval');
           expect(r.logs[0].args.owner).to.eq(owner);
           expect(r.logs[0].args.spender).to.eq(anotherAccount);
-          r.logs[0].args.value.should.be.bignumber.eq(unitTokenAmount);
+          r.logs[0].args.value.toString().should.be.eq(unitTokenAmount.toString());
         });
       });
     });

@@ -4,11 +4,12 @@ const Orchestrator = artifacts.require('Orchestrator.sol');
 const RebaseCallerContract = artifacts.require('RebaseCallerContract.sol');
 const ConstructorRebaseCallerContract = artifacts.require('ConstructorRebaseCallerContract.sol');
 
-const BigNumber = web3.BigNumber;
+const BigNumber = web3.utils.BN;
 const _require = require('app-root-path').require;
 const BlockchainCaller = _require('/util/blockchain_caller');
 const chain = new BlockchainCaller(web3);
 const {expectRevert} = require('@openzeppelin/test-helpers');
+const encodeCall = require('zos-lib/lib/helpers/encodeCall').default;
 
 require('chai')
   .use(require('chai-bignumber')(BigNumber))
@@ -24,7 +25,11 @@ async function setupContracts () {
   deployer = accounts[0];
   user = accounts[1];
   mockPolicy = await MockUFragmentsPolicy.new();
-  orchestrator = await Orchestrator.new(mockPolicy.address);
+  orchestrator = await Orchestrator.new();
+  r = await orchestrator.sendTransaction({
+    data: encodeCall('initialize', ['address', 'address'], [deployer, mockPolicy.address]),
+    from: deployer
+  });
   mockDownstream = await MockDownstream.new();
 }
 
@@ -62,30 +67,34 @@ contract('Orchestrator', function (accounts) {
     });
 
     it('should have no transactions', async function () {
-      (await orchestrator.transactionsSize.call()).should.be.bignumber.eq(0);
+      (await orchestrator.transactionsSize.call()).toString().should.be.eq('0');
     });
 
     it('should call rebase on policy', async function () {
-      const fnCalled = mockPolicy.FunctionCalled().formatter(r.receipt.logs[0]);
+      // TODO fix this using web3.eth.abi.decodeLog on the rawLogs, expected events are missing from logs
+      //console.log('XXX mockPolicy', r.receipt.rawLogs)
+      //console.log('XXX mockPolicy', mockPolicy.abi, r.receipt.rawLogs[0].data, r.receipt.rawLogs[0].topics)
+      //console.log('XXX mockPolicy', web3.eth.abi.decodeLog(mockPolicy.abi, r.receipt.rawLogs[0].data, r.receipt.rawLogs[0].topics))
+      const fnCalled = mockPolicy.contract.events.FunctionCalled().formatter(r.receipt.rawLogs[0]);
       expect(fnCalled.args.instanceName).to.eq('UFragmentsPolicy');
       expect(fnCalled.args.functionName).to.eq('rebase');
       expect(fnCalled.args.caller).to.eq(orchestrator.address);
     });
 
     it('should not have any subsequent logs', async function () {
-      expect(r.receipt.logs.length).to.eq(1);
+      expect(r.receipt.rawLogs.length).to.eq(1);
     });
   });
 
   describe('when there is a single transaction', async function () {
     before('adding a transaction', async function () {
-      const updateOneArgEncoded = mockDownstream.contract.updateOneArg.getData(12345);
+      const updateOneArgEncoded = mockDownstream.contract.methods.updateOneArg(12345).encodeABI();
       orchestrator.addTransaction(mockDownstream.address, updateOneArgEncoded, {from: deployer});
       r = await orchestrator.rebase();
     });
 
     it('should have 1 transaction', async function () {
-      (await orchestrator.transactionsSize.call()).should.be.bignumber.eq(1);
+      (await orchestrator.transactionsSize.call()).toString().should.be.eq('1');
     });
 
     it('should call rebase on policy', async function () {
@@ -109,19 +118,19 @@ contract('Orchestrator', function (accounts) {
     });
 
     it('should not have any subsequent logs', async function () {
-      expect(r.receipt.logs.length).to.eq(3);
+      expect(r.receipt.rawLogs.length).to.eq(3);
     });
   });
 
   describe('when there are two transactions', async function () {
     before('adding a transaction', async function () {
-      const updateTwoArgsEncoded = mockDownstream.contract.updateTwoArgs.getData(12345, 23456);
+      const updateTwoArgsEncoded = mockDownstream.contract.methods.updateTwoArgs(12345, 23456).encodeABI();
       orchestrator.addTransaction(mockDownstream.address, updateTwoArgsEncoded, {from: deployer});
       r = await orchestrator.rebase();
     });
 
     it('should have 2 transactions', async function () {
-      (await orchestrator.transactionsSize.call()).should.be.bignumber.eq(2);
+      (await orchestrator.transactionsSize.call()).toString().should.be.eq('2');
     });
 
     it('should call rebase on policy', async function () {
@@ -158,7 +167,7 @@ contract('Orchestrator', function (accounts) {
     });
 
     it('should not have any subsequent logs', async function () {
-      expect(r.receipt.logs.length).to.eq(5);
+      expect(r.receipt.rawLogs.length).to.eq(5);
     });
   });
 
@@ -169,7 +178,7 @@ contract('Orchestrator', function (accounts) {
     });
 
     it('should have 2 transactions', async function () {
-      (await orchestrator.transactionsSize.call()).should.be.bignumber.eq(2);
+      (await orchestrator.transactionsSize.call()).toString().should.be.eq('2');
     });
 
     it('should call rebase on policy', async function () {
@@ -193,7 +202,7 @@ contract('Orchestrator', function (accounts) {
     });
 
     it('should not have any subsequent logs', async function () {
-      expect(r.receipt.logs.length).to.eq(3);
+      expect(r.receipt.rawLogs.length).to.eq(3);
     });
   });
 
@@ -204,7 +213,7 @@ contract('Orchestrator', function (accounts) {
     });
 
     it('should have 1 transaction', async function () {
-      (await orchestrator.transactionsSize.call()).should.be.bignumber.eq(1);
+      (await orchestrator.transactionsSize.call()).toString().should.be.eq('1');
     });
 
     it('should call rebase on policy', async function () {
@@ -228,7 +237,7 @@ contract('Orchestrator', function (accounts) {
     });
 
     it('should not have any subsequent logs', async function () {
-      expect(r.receipt.logs.length).to.eq(3);
+      expect(r.receipt.rawLogs.length).to.eq(3);
     });
   });
 
@@ -239,7 +248,7 @@ contract('Orchestrator', function (accounts) {
     });
 
     it('should have 0 transactions', async function () {
-      (await orchestrator.transactionsSize.call()).should.be.bignumber.eq(0);
+      (await orchestrator.transactionsSize.call()).toString().should.be.eq('0');
     });
 
     it('should call rebase on policy', async function () {
@@ -250,32 +259,32 @@ contract('Orchestrator', function (accounts) {
     });
 
     it('should not have any subsequent logs', async function () {
-      expect(r.receipt.logs.length).to.eq(1);
+      expect(r.receipt.rawLogs.length).to.eq(1);
     });
   });
 
   describe('when a transaction reverts', async function () {
     before('adding 3 transactions', async function () {
-      const updateOneArgEncoded = mockDownstream.contract.updateOneArg.getData(123);
+      const updateOneArgEncoded = mockDownstream.contract.methods.updateOneArg(123).encodeABI();
       orchestrator.addTransaction(mockDownstream.address, updateOneArgEncoded, {from: deployer});
 
-      const revertsEncoded = mockDownstream.contract.reverts.getData();
+      const revertsEncoded = mockDownstream.contract.methods.reverts().encodeABI();
       orchestrator.addTransaction(mockDownstream.address, revertsEncoded, {from: deployer});
 
-      const updateTwoArgsEncoded = mockDownstream.contract.updateTwoArgs.getData(12345, 23456);
+      const updateTwoArgsEncoded = mockDownstream.contract.methods.updateTwoArgs(12345, 23456).encodeABI();
       orchestrator.addTransaction(mockDownstream.address, updateTwoArgsEncoded, {from: deployer});
       await expectRevert.unspecified(orchestrator.rebase());
     });
 
     it('should have 3 transactions', async function () {
-      (await orchestrator.transactionsSize.call()).should.be.bignumber.eq(3);
+      (await orchestrator.transactionsSize.call()).toString().should.be.eq('3');
     });
   });
 
   describe('Access Control', function () {
     describe('addTransaction', async function () {
       it('should be callable by owner', async function () {
-        const updateNoArgEncoded = mockDownstream.contract.updateNoArg.getData();
+        const updateNoArgEncoded = mockDownstream.contract.methods.updateNoArg().encodeABI();
         expect(
           await chain.isEthException(
             orchestrator.addTransaction(mockDownstream.address, updateNoArgEncoded, {from: deployer})
@@ -284,7 +293,7 @@ contract('Orchestrator', function (accounts) {
       });
 
       it('should be not be callable by others', async function () {
-        const updateNoArgEncoded = mockDownstream.contract.updateNoArg.getData();
+        const updateNoArgEncoded = mockDownstream.contract.methods.updateNoArg().encodeABI();
         expect(
           await chain.isEthException(
             orchestrator.addTransaction(mockDownstream.address, updateNoArgEncoded, {from: user})
@@ -295,7 +304,7 @@ contract('Orchestrator', function (accounts) {
 
     describe('setTransactionEnabled', async function () {
       it('should be callable by owner', async function () {
-        (await orchestrator.transactionsSize.call()).should.be.bignumber.gt(0);
+        expect((await orchestrator.transactionsSize.call()).gt(new BigNumber(0)));
         expect(
           await chain.isEthException(
             orchestrator.setTransactionEnabled(0, true, {from: deployer})
@@ -304,7 +313,7 @@ contract('Orchestrator', function (accounts) {
       });
 
       it('should be not be callable by others', async function () {
-        (await orchestrator.transactionsSize.call()).should.be.bignumber.gt(0);
+        expect((await orchestrator.transactionsSize.call()).gt(new BigNumber(0)));
         expect(
           await chain.isEthException(
             orchestrator.setTransactionEnabled(0, true, {from: user})
@@ -315,7 +324,7 @@ contract('Orchestrator', function (accounts) {
 
     describe('removeTransaction', async function () {
       it('should be not be callable by others', async function () {
-        (await orchestrator.transactionsSize.call()).should.be.bignumber.gt(0);
+        expect((await orchestrator.transactionsSize.call()).gt(new BigNumber(0)));
         expect(
           await chain.isEthException(
             orchestrator.removeTransaction(0, {from: user})
@@ -324,7 +333,7 @@ contract('Orchestrator', function (accounts) {
       });
 
       it('should be callable by owner', async function () {
-        (await orchestrator.transactionsSize.call()).should.be.bignumber.gt(0);
+        expect((await orchestrator.transactionsSize.call()).gt(new BigNumber(0)));
         expect(
           await chain.isEthException(
             orchestrator.removeTransaction(0, {from: deployer})
@@ -335,9 +344,9 @@ contract('Orchestrator', function (accounts) {
 
     describe('transferOwnership', async function () {
       it('should transfer ownership', async function () {
-        (await orchestrator.owner.call()).should.eq(deployer);
+        (await orchestrator.owner.call()).toLowerCase().should.eq(deployer.toLowerCase());
         await orchestrator.transferOwnership(user);
-        (await orchestrator.owner.call()).should.eq(user);
+        (await orchestrator.owner.call()).toLowerCase().should.eq(user.toLowerCase());
       });
     });
   });
