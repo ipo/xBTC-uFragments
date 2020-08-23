@@ -1,7 +1,6 @@
 pragma solidity 0.5.17;
 
-import "@openzeppelin/upgrades/contracts/Initializable.sol";
-import "@openzeppelin/upgrades/contracts/ownership/Ownable.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol";
 import "./UFragmentsPolicy.sol";
 
 
@@ -10,7 +9,7 @@ import "./UFragmentsPolicy.sol";
  * @notice The orchestrator is the main entry point for rebase operations. It coordinates the policy
  * actions with external consumers.
  */
-contract Orchestrator is OpenZeppelinUpgradesOwnable, Initializable {
+contract Orchestrator is Ownable {
 
     struct Transaction {
         bool enabled;
@@ -116,7 +115,7 @@ contract Orchestrator is OpenZeppelinUpgradesOwnable, Initializable {
         public
         initializer
     {
-        OpenZeppelinUpgradesOwnable._transferOwnership(owner_);
+        Ownable.initialize(owner_);
 
         policy = UFragmentsPolicy(policy_);
     }

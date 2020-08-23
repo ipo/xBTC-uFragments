@@ -13,7 +13,7 @@ interface ITellor {
 }
 
 
-contract TellorToMedianOracle is OpenZeppelinUpgradesOwnable, Initializable {
+contract TellorToMedianOracle is Ownable {
     using SafeMath for uint256;
 
     ITellor public tellor;
@@ -94,7 +94,7 @@ contract TellorToMedianOracle is OpenZeppelinUpgradesOwnable, Initializable {
         public
         initializer
     {
-        OpenZeppelinUpgradesOwnable._transferOwnership(owner_);
+        Ownable.initialize(owner_);
 
         require(tellorDecimals_ <= 18);
         tellor = tellor_;

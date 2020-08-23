@@ -1,7 +1,6 @@
 pragma solidity 0.5.17;
 
-import "@openzeppelin/upgrades/contracts/Initializable.sol";
-import "@openzeppelin/upgrades/contracts/ownership/Ownable.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol";
 import "./lib/SafeMathInt.sol";
 import "./lib/UInt256Lib.sol";
 import "./UFragments.sol";
@@ -18,7 +17,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/math/Math.sol";
  *      This component regulates the token supply of the uFragments ERC20 token in response to
  *      market oracles.
  */
-contract UFragmentsPolicy is OpenZeppelinUpgradesOwnable, Initializable {
+contract UFragmentsPolicy is Ownable {
     using SafeMath for uint256;
     using SafeMathInt for int256;
     using UInt256Lib for uint256;
@@ -260,7 +259,7 @@ contract UFragmentsPolicy is OpenZeppelinUpgradesOwnable, Initializable {
         public
         initializer
     {
-        OpenZeppelinUpgradesOwnable._transferOwnership(owner_);
+        Ownable.initialize(owner_);
 
         // deviationThreshold = 0.05e18 = 5e16
         deviationThreshold = 5 * 10 ** (DECIMALS-2);

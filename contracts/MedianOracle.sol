@@ -1,8 +1,7 @@
 pragma solidity 0.5.17;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/upgrades/contracts/Initializable.sol";
-import "@openzeppelin/upgrades/contracts/ownership/Ownable.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol";
 import "./lib/Select.sol";
 import "./IOracle.sol";
 
@@ -13,7 +12,7 @@ import "./IOracle.sol";
  * @notice Provides a value onchain that's aggregated from a whitelisted set of
  *         providers.
  */
-contract MedianOracle is OpenZeppelinUpgradesOwnable, Initializable, IOracle {
+contract MedianOracle is Ownable, IOracle {
     using SafeMath for uint256;
 
     struct Report {
@@ -240,7 +239,7 @@ contract MedianOracle is OpenZeppelinUpgradesOwnable, Initializable, IOracle {
         public
         initializer
     {
-        OpenZeppelinUpgradesOwnable._transferOwnership(owner_);
+        Ownable.initialize(owner_);
 
         require(reportExpirationTimeSec_ <= maxReportExpirationTime);
         require(minimumProviders_ > 0);

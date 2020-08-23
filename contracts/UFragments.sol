@@ -1,7 +1,7 @@
 pragma solidity 0.5.17;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/upgrades/contracts/ownership/Ownable.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol";
 import "./lib/SafeMathInt.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Detailed.sol";
 
@@ -16,7 +16,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Deta
  *      We support splitting the currency in expansion and combining the currency on contraction by
  *      changing the exchange rate between the hidden 'gons' and the public 'fragments'.
  */
-contract UFragments is ERC20Detailed, OpenZeppelinUpgradesOwnable {
+contract UFragments is ERC20Detailed, Ownable {
     // PLEASE READ BEFORE CHANGING ANY ACCOUNTING OR MATH
     // Anytime there is division, there is a risk of numerical instability from rounding errors. In
     // order to minimize this risk, we adhere to the following guidelines:
@@ -172,7 +172,7 @@ contract UFragments is ERC20Detailed, OpenZeppelinUpgradesOwnable {
         initializer
     {
         ERC20Detailed.initialize(tokenName_, tokenTicker_, uint8(DECIMALS));
-        OpenZeppelinUpgradesOwnable._transferOwnership(owner_);
+        Ownable.initialize(owner_);
 
         rebasePaused = false;
         tokenPaused = false;
