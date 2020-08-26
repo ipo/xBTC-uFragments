@@ -212,6 +212,63 @@ contract MedianOracle is Ownable, IOracle {
     }
 
     /**
+    * @notice Computes median of provider reports whose timestamps are in the
+    *         valid timestamp range. Usable as a view.
+    * @return AggregatedValue: Median of providers reported values.
+    *         valid: Boolean indicating an aggregated value was computed successfully.
+    */
+    function getDataAsView()
+        external
+        view
+        returns (uint256, bool)
+    {
+        uint256 reportsCount = providers.length;
+        uint256[] memory validReports = new uint256[](reportsCount);
+        uint256 size = 0;
+        uint256 minValidTimestamp =  now.sub(reportExpirationTimeSec);
+        uint256 maxValidTimestamp =  now.sub(reportDelaySec);
+
+        for (uint256 i = 0; i < reportsCount; i++) {
+            address providerAddress = providers[i];
+            Report[2] memory reports = providerReports[providerAddress];
+
+            uint8 indexRecent = reports[0].timestamp >= reports[1].timestamp ? 0 : 1;
+            uint8 indexPast = 1 - indexRecent;
+            uint256 reportTimestampRecent = reports[indexRecent].timestamp;
+            if (reportTimestampRecent > maxValidTimestamp) {
+                // Recent report is too recent.
+                uint256 reportTimestampPast = providerReports[providerAddress][indexPast].
+                    timestamp;
+                if (reportTimestampPast < minValidTimestamp) {
+                    // Past report is too old.
+                    // emit ReportTimestampOutOfRange(providerAddress);
+                } else if (reportTimestampPast > maxValidTimestamp) {
+                    // Past report is too recent.
+                    // emit ReportTimestampOutOfRange(providerAddress);
+                } else {
+                    // Using past report.
+                    validReports[size++] = providerReports[providerAddress][indexPast].payload;
+                }
+            } else {
+                // Recent report is not too recent.
+                if (reportTimestampRecent < minValidTimestamp) {
+                    // Recent report is too old.
+                    // emit ReportTimestampOutOfRange(providerAddress);
+                } else {
+                    // Using recent report.
+                    validReports[size++] = providerReports[providerAddress][indexRecent].payload;
+                }
+            }
+        }
+
+        if (size < minimumProviders) {
+            return (0, false);
+        }
+
+        return (Select.computeMedian(validReports, size), true);
+    }
+
+    /**
      * @return The number of authorized providers.
      */
     function providersSize()

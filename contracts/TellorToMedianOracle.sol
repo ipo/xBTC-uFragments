@@ -1,6 +1,8 @@
 pragma solidity 0.5.17;
 
-import "./MedianOracle.sol";
+import "./IOracle.sol";
+import "./usingtellor/contracts/UsingTellor.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol";
 
 
 interface ITellor {
@@ -13,11 +15,11 @@ interface ITellor {
 }
 
 
-contract TellorToMedianOracle is Ownable {
+contract TellorToMedianOracle is Ownable, UsingTellor {
     using SafeMath for uint256;
 
     ITellor public tellor;
-    MedianOracle public medianOracle;
+    IOracle public medianOracle;
     
     uint256 public tellorDecimals;
     uint256 public tellorId;
@@ -46,7 +48,10 @@ contract TellorToMedianOracle is Ownable {
         // get the value
         uint value;
         bool isValid;
-        (value, isValid) = tellor.getLastNewValueById(tellorId);
+        uint timestamp;
+
+        //(isValid, value, timestamp) = getCurrentValue(tellorId);
+        (isValid, value, timestamp) = getDataBefore(tellorId, now - 1 hours, 10, 0);
         require(isValid);
 
         // translate the value to 18 decimals
@@ -87,7 +92,7 @@ contract TellorToMedianOracle is Ownable {
     function initialize(
             address owner_,
             ITellor tellor_,
-            MedianOracle medianOracle_,
+            IOracle medianOracle_,
             uint256 tellorDecimals_,
             uint256 tellorId_
         )

@@ -35,3 +35,5 @@ ADD yarn.lock package.json /code/
 #RUN yarn add @openzeppelin/cli @truffle/hdwallet-provider truffle-hdwallet-provider-privkey@web3-one zos
 RUN yarn
 ADD . /code/
+# TODO init usingtellor RUN git clone git@github.com:tellor-io/usingtellor.git && cd usingtellor
+RUN git submodule update && rm contracts/usingtellor/flatfiles/usingTellor_flat_2020_05_17.sol

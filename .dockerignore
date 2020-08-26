@@ -74,9 +74,9 @@ coverage/
 coverageEnv/
 
 # git files
-.git/**
-.gitignore
-.gitattributes
+#.git/**
+#.gitignore
+#.gitattributes
 
 # docker files
 docker/Dockerfile
