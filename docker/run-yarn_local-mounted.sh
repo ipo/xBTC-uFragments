@@ -14,8 +14,8 @@ set -e
 docker run -it \
     --name $CONTAINER_NAME \
     --net host \
+    --volume `pwd`/:/code/:rw \
     $DOCKER_IMAGE $@
-#    --volume `pwd`/:/code/:rw \
 #    --rm \
 
-#docker container rm $CONTAINER_NAME
+docker container rm $CONTAINER_NAME
