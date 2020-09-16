@@ -1,0 +1,28 @@
+{
+  "zosversion": "2.2",
+  "contracts": {
+    "MedianOracle": "MedianOracle",
+    "UFragments": "UFragments",
+    "UFragmentsPolicy": "UFragmentsPolicy",
+    "Orchestrator": "Orchestrator"
+  },
+  "dependencies": {},
+  "name": "xBTC",
+  "version": "0.0.1",
+  "compiler": {
+    "manager": "zos",
+    "compilerSettings": {
+      "optimizer": {
+        "enabled": false,
+        "runs": "200"
+      }
+    },
+    "artifactsDir": "build/contracts",
+    "contractsDir": "contracts",
+    "solcVersion": "0.5.17",
+    "typechain": {
+      "enabled": false
+    }
+  },
+  "telemetryOptIn": false
+}

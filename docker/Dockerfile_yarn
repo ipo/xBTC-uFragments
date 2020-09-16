@@ -36,4 +36,4 @@ ADD yarn.lock package.json /code/
 RUN yarn
 ADD . /code/
 # TODO init usingtellor RUN git clone git@github.com:tellor-io/usingtellor.git && cd usingtellor
-RUN git submodule update && rm contracts/usingtellor/flatfiles/usingTellor_flat_2020_05_17.sol
+RUN git submodule update --init && rm contracts/usingtellor/flatfiles/usingTellor_flat_2020_05_17.sol
