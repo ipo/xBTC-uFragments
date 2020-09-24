@@ -28,7 +28,7 @@ module.exports = {
           2,
           {
             "comments": true,
-            "strings": true,
+            "strings": false,
             "identifiers": true,
             "lang": "en_US",
             "skipWords": [

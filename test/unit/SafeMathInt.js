@@ -1,15 +1,18 @@
-const SafeMathIntMock = artifacts.require('SafeMathIntMock');
+const { contract, web3 } = require('@openzeppelin/test-environment');
+
+const SafeMathIntMock = contract.fromArtifact('SafeMathIntMock');
 
 const BigNumber = web3.utils.BN;
 const _require = require('app-root-path').require;
 const BlockchainCaller = _require('/util/blockchain_caller');
 const chain = new BlockchainCaller(web3);
+const expect = require('chai').expect;
 
 require('chai')
   .use(require('chai-bignumber')(BigNumber))
   .should();
 
-contract('SafeMathInt', () => {
+describe('SafeMathInt', () => {
   const MIN_INT256 = new BigNumber(-2).pow(new BigNumber(255));
   const MAX_INT256 = new BigNumber(2).pow(new BigNumber(255)).sub(new BigNumber(1));
 

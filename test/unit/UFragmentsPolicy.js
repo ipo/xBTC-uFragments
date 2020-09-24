@@ -1,12 +1,16 @@
-const UFragmentsPolicy = artifacts.require('UFragmentsPolicy.sol');
-const MockUFragments = artifacts.require('MockUFragments.sol');
-const MockOracle = artifacts.require('MockOracle.sol');
+const { contract, web3 } = require('@openzeppelin/test-environment');
+const {expectEvent} = require('@openzeppelin/test-helpers');
+
+const UFragmentsPolicy = contract.fromArtifact('UFragmentsPolicy');
+const MockUFragments = contract.fromArtifact('MockUFragments');
+const MockOracle = contract.fromArtifact('MockOracle');
 
 const encodeCall = require('zos-lib/lib/helpers/encodeCall').default;
 const BigNumber = web3.utils.BN;
 const _require = require('app-root-path').require;
 const BlockchainCaller = _require('/util/blockchain_caller');
 const chain = new BlockchainCaller(web3);
+const expect = require('chai').expect;
 
 require('chai')
   .use(require('chai-bignumber')(BigNumber))
@@ -66,7 +70,7 @@ async function mockExternalData (rate, cpi, uFragSupply, rateValidity = true, cp
   await mockUFragments.storeSupply(uFragSupply);
 }
 
-contract('UFragmentsPolicy', function (accounts) {
+describe('UFragmentsPolicy', function () {
   before('setup UFragmentsPolicy contract', setupContracts);
 
   it('should reject any ether sent to it', async function () {
@@ -76,7 +80,7 @@ contract('UFragmentsPolicy', function (accounts) {
   });
 });
 
-contract('UFragmentsPolicy:initialize', async function (accounts) {
+describe('UFragmentsPolicy:initialize', async function () {
   describe('initial values set correctly', function () {
     before('setup UFragmentsPolicy contract', setupContracts);
 
@@ -107,7 +111,7 @@ contract('UFragmentsPolicy:initialize', async function (accounts) {
   });
 });
 
-contract('UFragmentsPolicy:setMarketOracle', async function (accounts) {
+describe('UFragmentsPolicy:setMarketOracle', async function () {
   before('setup UFragmentsPolicy contract', setupContracts);
 
   it('should set marketOracle', async function () {
@@ -116,7 +120,7 @@ contract('UFragmentsPolicy:setMarketOracle', async function (accounts) {
   });
 });
 
-contract('UFragments:setMarketOracle:accessControl', function (accounts) {
+describe('UFragments:setMarketOracle:accessControl', function () {
   before('setup UFragmentsPolicy contract', setupContracts);
 
   it('should be callable by owner', async function () {
@@ -132,7 +136,7 @@ contract('UFragments:setMarketOracle:accessControl', function (accounts) {
   });
 });
 
-contract('UFragmentsPolicy:setDominusOracle', async function (accounts) {
+describe('UFragmentsPolicy:setDominusOracle', async function () {
   before('setup UFragmentsPolicy contract', setupContracts);
 
   it('should set cpiOracle', async function () {
@@ -141,7 +145,7 @@ contract('UFragmentsPolicy:setDominusOracle', async function (accounts) {
   });
 });
 
-contract('UFragments:setDominusOracle:accessControl', function (accounts) {
+describe('UFragments:setDominusOracle:accessControl', function () {
   before('setup UFragmentsPolicy contract', setupContracts);
 
   it('should be callable by owner', async function () {
@@ -157,7 +161,7 @@ contract('UFragments:setDominusOracle:accessControl', function (accounts) {
   });
 });
 
-contract('UFragmentsPolicy:setOrchestrator', async function (accounts) {
+describe('UFragmentsPolicy:setOrchestrator', async function () {
   before('setup UFragmentsPolicy contract', setupContracts);
 
   it('should set orchestrator', async function () {
@@ -166,7 +170,7 @@ contract('UFragmentsPolicy:setOrchestrator', async function (accounts) {
   });
 });
 
-contract('UFragments:setOrchestrator:accessControl', function (accounts) {
+describe('UFragments:setOrchestrator:accessControl', function () {
   before('setup UFragmentsPolicy contract', setupContracts);
 
   it('should be callable by owner', async function () {
@@ -182,7 +186,7 @@ contract('UFragments:setOrchestrator:accessControl', function (accounts) {
   });
 });
 
-contract('UFragmentsPolicy:setDeviationThreshold', async function (accounts) {
+describe('UFragmentsPolicy:setDeviationThreshold', async function () {
   let prevThreshold, threshold;
   before('setup UFragmentsPolicy contract', async function () {
     await setupContracts();
@@ -196,7 +200,7 @@ contract('UFragmentsPolicy:setDeviationThreshold', async function (accounts) {
   });
 });
 
-contract('UFragments:setDeviationThreshold:accessControl', function (accounts) {
+describe('UFragments:setDeviationThreshold:accessControl', function () {
   before('setup UFragmentsPolicy contract', setupContracts);
 
   it('should be callable by owner', async function () {
@@ -212,7 +216,7 @@ contract('UFragments:setDeviationThreshold:accessControl', function (accounts) {
   });
 });
 
-contract('UFragmentsPolicy:setRebaseLag', async function (accounts) {
+describe('UFragmentsPolicy:setRebaseLag', async function () {
   let prevLag;
   before('setup UFragmentsPolicy contract', async function () {
     await setupContracts();
@@ -236,7 +240,7 @@ contract('UFragmentsPolicy:setRebaseLag', async function (accounts) {
   });
 });
 
-contract('UFragments:setRebaseLag:accessControl', function (accounts) {
+describe('UFragments:setRebaseLag:accessControl', function () {
   before('setup UFragmentsPolicy contract', setupContracts);
 
   it('should be callable by owner', async function () {
@@ -252,7 +256,7 @@ contract('UFragments:setRebaseLag:accessControl', function (accounts) {
   });
 });
 
-contract('UFragmentsPolicy:setRebaseTimingParameters', async function (accounts) {
+describe('UFragmentsPolicy:setRebaseTimingParameters', async function () {
   before('setup UFragmentsPolicy contract', async function () {
     await setupContracts();
   });
@@ -283,7 +287,7 @@ contract('UFragmentsPolicy:setRebaseTimingParameters', async function (accounts)
   });
 });
 
-contract('UFragments:setRebaseTimingParameters:accessControl', function (accounts) {
+describe('UFragments:setRebaseTimingParameters:accessControl', function () {
   before('setup UFragmentsPolicy contract', setupContracts);
 
   it('should be callable by owner', async function () {
@@ -299,7 +303,7 @@ contract('UFragments:setRebaseTimingParameters:accessControl', function (account
   });
 });
 
-contract('UFragmentsPolicy:Rebase:accessControl', async function (accounts) {
+describe('UFragmentsPolicy:Rebase:accessControl', async function () {
   beforeEach('setup UFragmentsPolicy contract', async function () {
     await setupContractsWithOpenRebaseWindow();
     await mockExternalData(INITIAL_RATE_30P_MORE, INITIAL_CPI, 1000, true);
@@ -323,7 +327,7 @@ contract('UFragmentsPolicy:Rebase:accessControl', async function (accounts) {
   });
 });
 
-contract('UFragmentsPolicy:Rebase', async function (accounts) {
+describe('UFragmentsPolicy:Rebase', async function () {
   before('setup UFragmentsPolicy contract', setupContractsWithOpenRebaseWindow);
 
   describe('when minRebaseTimeIntervalSec has NOT passed since the previous rebase', function () {
@@ -341,7 +345,7 @@ contract('UFragmentsPolicy:Rebase', async function (accounts) {
   });
 });
 
-contract('UFragmentsPolicy:Rebase', async function (accounts) {
+describe('UFragmentsPolicy:Rebase', async function () {
   before('setup UFragmentsPolicy contract', setupContractsWithOpenRebaseWindow);
 
   describe('when rate is within deviationThreshold', function () {
@@ -374,7 +378,7 @@ contract('UFragmentsPolicy:Rebase', async function (accounts) {
   });
 });
 
-contract('UFragmentsPolicy:Rebase', async function (accounts) {
+describe('UFragmentsPolicy:Rebase', async function () {
   before('setup UFragmentsPolicy contract', setupContractsWithOpenRebaseWindow);
 
   describe('when rate is more than MAX_RATE', function () {
@@ -400,7 +404,7 @@ contract('UFragmentsPolicy:Rebase', async function (accounts) {
   });
 });
 
-contract('UFragmentsPolicy:Rebase', async function (accounts) {
+describe('UFragmentsPolicy:Rebase', async function () {
   before('setup UFragmentsPolicy contract', setupContractsWithOpenRebaseWindow);
 
   describe('when uFragments grows beyond MAX_SUPPLY', function () {
@@ -418,7 +422,7 @@ contract('UFragmentsPolicy:Rebase', async function (accounts) {
   });
 });
 
-contract('UFragmentsPolicy:Rebase', async function (accounts) {
+describe('UFragmentsPolicy:Rebase', async function () {
   before('setup UFragmentsPolicy contract', setupContractsWithOpenRebaseWindow);
 
   describe('when uFragments supply equals MAX_SUPPLY and rebase attempts to grow', function () {
@@ -434,7 +438,7 @@ contract('UFragmentsPolicy:Rebase', async function (accounts) {
   });
 });
 
-contract('UFragmentsPolicy:Rebase', async function (accounts) {
+describe('UFragmentsPolicy:Rebase', async function () {
   before('setup UFragmentsPolicy contract', setupContractsWithOpenRebaseWindow);
 
   describe('when the market oracle returns invalid data', function () {
@@ -458,7 +462,7 @@ contract('UFragmentsPolicy:Rebase', async function (accounts) {
   });
 });
 
-contract('UFragmentsPolicy:Rebase', async function (accounts) {
+describe('UFragmentsPolicy:Rebase', async function () {
   before('setup UFragmentsPolicy contract', setupContractsWithOpenRebaseWindow);
 
   describe('when the cpi oracle returns invalid data', function () {
@@ -482,7 +486,7 @@ contract('UFragmentsPolicy:Rebase', async function (accounts) {
   });
 });
 
-contract('UFragmentsPolicy:Rebase', async function (accounts) {
+describe('UFragmentsPolicy:Rebase', async function () {
   before('setup UFragmentsPolicy contract', setupContractsWithOpenRebaseWindow);
 
   describe('positive rate and no change CPI', function () {
@@ -545,35 +549,56 @@ contract('UFragmentsPolicy:Rebase', async function (accounts) {
     });
 
     it('should call getData from the market oracle', async function () {
-      const fnCalled = mockMarketOracle.FunctionCalled().formatter(r.receipt.logs[2]);
-      expect(fnCalled.args.instanceName).to.eq('MarketOracle');
-      expect(fnCalled.args.functionName).to.eq('getData');
-      expect(fnCalled.args.caller).to.eq(uFragmentsPolicy.address);
+      await expectEvent.inTransaction(
+        r.tx,
+        mockMarketOracle,
+        'FunctionCalled',
+        {
+          instanceName: 'MarketOracle',
+          functionName: 'getData',
+          caller: uFragmentsPolicy.address
+        }
+      );
     });
 
     it('should call getData from the cpi oracle', async function () {
-      const fnCalled = mockCpiOracle.FunctionCalled().formatter(r.receipt.logs[0]);
-      expect(fnCalled.args.instanceName).to.eq('CpiOracle');
-      expect(fnCalled.args.functionName).to.eq('getData');
-      expect(fnCalled.args.caller).to.eq(uFragmentsPolicy.address);
+      await expectEvent.inTransaction(
+        r.tx,
+        mockCpiOracle,
+        'FunctionCalled',
+        {
+          instanceName: 'CpiOracle',
+          functionName: 'getData',
+          caller: uFragmentsPolicy.address
+        }
+      );
     });
 
     it('should call uFrag Rebase', async function () {
-      prevEpoch = await uFragmentsPolicy.epoch.call();
-      const fnCalled = mockUFragments.FunctionCalled().formatter(r.receipt.logs[4]);
-      expect(fnCalled.args.instanceName).to.eq('UFragments');
-      expect(fnCalled.args.functionName).to.eq('rebase');
-      expect(fnCalled.args.caller).to.eq(uFragmentsPolicy.address);
-      const fnArgs = mockUFragments.FunctionArguments().formatter(r.receipt.logs[5]);
-      const parsedFnArgs = Object.keys(fnArgs.args).reduce((m, k) => {
-        return fnArgs.args[k].map(d => d.toNumber()).concat(m);
-      }, [ ]);
-      expect(parsedFnArgs).to.include.members([prevEpoch.toNumber(), 20]);
+      await expectEvent.inTransaction(
+        r.tx,
+        mockUFragments,
+        'FunctionCalled',
+        {
+          instanceName: 'UFragments',
+          functionName: 'rebase',
+          caller: uFragmentsPolicy.address
+        }
+      );
+
+      const event = web3.eth.abi.decodeLog(
+        mockUFragments.abi[0].inputs,
+        r.receipt.rawLogs[5].data,
+        r.receipt.rawLogs[5].topics.slice(1)
+      );
+
+      expect(event.uintVals).to.deep.equal(['2']);
+      expect(event.intVals).to.deep.equal(['20']);
     });
   });
 });
 
-contract('UFragmentsPolicy:Rebase', async function (accounts) {
+describe('UFragmentsPolicy:Rebase', async function () {
   before('setup UFragmentsPolicy contract', setupContractsWithOpenRebaseWindow);
 
   describe('negative rate', function () {
@@ -591,7 +616,7 @@ contract('UFragmentsPolicy:Rebase', async function (accounts) {
   });
 });
 
-contract('UFragmentsPolicy:Rebase', async function (accounts) {
+describe('UFragmentsPolicy:Rebase', async function () {
   before('setup UFragmentsPolicy contract', setupContractsWithOpenRebaseWindow);
 
   describe('when cpi increases', function () {
@@ -610,7 +635,7 @@ contract('UFragmentsPolicy:Rebase', async function (accounts) {
   });
 });
 
-contract('UFragmentsPolicy:Rebase', async function (accounts) {
+describe('UFragmentsPolicy:Rebase', async function () {
   before('setup UFragmentsPolicy contract', setupContractsWithOpenRebaseWindow);
 
   describe('when cpi decreases', function () {
@@ -629,7 +654,7 @@ contract('UFragmentsPolicy:Rebase', async function (accounts) {
   });
 });
 
-contract('UFragmentsPolicy:Rebase', async function (accounts) {
+describe('UFragmentsPolicy:Rebase', async function () {
   before('setup UFragmentsPolicy contract', setupContractsWithOpenRebaseWindow);
 
   describe('rate=TARGET_RATE', function () {
@@ -648,7 +673,7 @@ contract('UFragmentsPolicy:Rebase', async function (accounts) {
   });
 });
 
-contract('UFragmentsPolicy:Rebase', async function (accounts) {
+describe('UFragmentsPolicy:Rebase', async function () {
   let rbTime, rbWindow, minRebaseTimeIntervalSec, now, prevRebaseTime, nextRebaseWindowOpenTime,
     timeToWait, lastRebaseTimestamp;
 
@@ -716,7 +741,7 @@ contract('UFragmentsPolicy:Rebase', async function (accounts) {
   });
 });
 
-contract('UFragmentsPolicy:RebaseWithLimit', async function (accounts) {
+describe('UFragmentsPolicy:RebaseWithLimit', async function () {
   before('setup UFragmentsPolicy contract with limits', setupContractsWithOpenRebaseWindow);
 
   describe('positive rate and no change CPI', function () {
@@ -780,35 +805,58 @@ contract('UFragmentsPolicy:RebaseWithLimit', async function (accounts) {
     });
 
     it('should call getData from the market oracle', async function () {
-      const fnCalled = mockMarketOracle.FunctionCalled().formatter(r.receipt.logs[2]);
-      expect(fnCalled.args.instanceName).to.eq('MarketOracle');
-      expect(fnCalled.args.functionName).to.eq('getData');
-      expect(fnCalled.args.caller).to.eq(uFragmentsPolicy.address);
+      await expectEvent.inTransaction(
+        r.tx,
+        mockMarketOracle,
+        'FunctionCalled',
+        {
+          instanceName: 'MarketOracle',
+          functionName: 'getData',
+          caller: uFragmentsPolicy.address
+        }
+      );
     });
 
     it('should call getData from the cpi oracle', async function () {
-      const fnCalled = mockCpiOracle.FunctionCalled().formatter(r.receipt.logs[0]);
-      expect(fnCalled.args.instanceName).to.eq('CpiOracle');
-      expect(fnCalled.args.functionName).to.eq('getData');
-      expect(fnCalled.args.caller).to.eq(uFragmentsPolicy.address);
+      await expectEvent.inTransaction(
+        r.tx,
+        mockCpiOracle,
+        'FunctionCalled',
+        {
+          instanceName: 'CpiOracle',
+          functionName: 'getData',
+          caller: uFragmentsPolicy.address
+        }
+      );
     });
 
     it('should call uFrag Rebase', async function () {
       prevEpoch = await uFragmentsPolicy.epoch.call();
-      const fnCalled = mockUFragments.FunctionCalled().formatter(r.receipt.logs[4]);
-      expect(fnCalled.args.instanceName).to.eq('UFragments');
-      expect(fnCalled.args.functionName).to.eq('rebase');
-      expect(fnCalled.args.caller).to.eq(uFragmentsPolicy.address);
-      const fnArgs = mockUFragments.FunctionArguments().formatter(r.receipt.logs[5]);
-      const parsedFnArgs = Object.keys(fnArgs.args).reduce((m, k) => {
-        return fnArgs.args[k].map(d => d.toNumber()).concat(m);
-      }, [ ]);
-      expect(parsedFnArgs).to.include.members([prevEpoch.toNumber(), 20]);
+
+      await expectEvent.inTransaction(
+        r.tx,
+        mockUFragments,
+        'FunctionCalled',
+        {
+          instanceName: 'UFragments',
+          functionName: 'rebase',
+          caller: uFragmentsPolicy.address
+        }
+      );
+
+      const event = web3.eth.abi.decodeLog(
+        mockUFragments.abi[0].inputs,
+        r.receipt.rawLogs[5].data,
+        r.receipt.rawLogs[5].topics.slice(1)
+      );
+
+      expect(event.uintVals).to.deep.equal([prevEpoch.toString()]);
+      expect(event.intVals).to.deep.equal(['10']);
     });
   });
 });
 
-contract('UFragmentsPolicy:RebaseWithLimit', async function (accounts) {
+describe('UFragmentsPolicy:RebaseWithLimit', async function () {
   before('setup UFragmentsPolicy contract with limits', setupContractsWithOpenRebaseWindow);
 
   describe('negative rate', function () {

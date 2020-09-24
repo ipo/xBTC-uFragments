@@ -9,8 +9,10 @@
   npx truffle --network ganacheUnitTest exec ./test/simulation/supply_precision.js
 */
 
+const { contract, web3 } = require('@openzeppelin/test-environment');
+
 const expect = require('chai').expect;
-const UFragments = artifacts.require('UFragments.sol');
+const UFragments = contract.fromArtifact('UFragments');
 const _require = require('app-root-path').require;
 const BlockchainCaller = _require('/util/blockchain_caller');
 const chain = new BlockchainCaller(web3);

@@ -26,11 +26,15 @@
   These test cases are inspired from OpenZepplin's ERC20 unit test.
   https://github.com/OpenZeppelin/openzeppelin-solidity/blob/master/test/token/ERC20/ERC20.test.js
 */
-const UFragments = artifacts.require('UFragments.sol');
+const { contract, web3 } = require('@openzeppelin/test-environment');
+
+const UFragments = contract.fromArtifact('UFragments');
 const _require = require('app-root-path').require;
 const BlockchainCaller = _require('/util/blockchain_caller');
 const chain = new BlockchainCaller(web3);
 const BigNumber = web3.utils.BN;
+const expect = require('chai').expect;
+
 const encodeCall = require('zos-lib/lib/helpers/encodeCall').default;
 
 require('chai')
@@ -53,18 +57,21 @@ const transferAmountMinusOne = transferAmount.sub(unitTokenAmount);
 
 let token, owner, anotherAccount, recipient, r;
 async function setupContractAndAccounts (accounts) {
+  await chain.waitForSomeTime(86400);
   owner = accounts[0];
   anotherAccount = accounts[8];
   recipient = accounts[9];
   token = await UFragments.new();
+
   await token.sendTransaction({
     data: encodeCall('initialize', ['address', 'string', 'string'], [owner, 'xBTC', 'xBTC']),
     from: owner
   });
 }
 
-contract('UFragments:ERC20', function (accounts) {
+describe('UFragments:ERC20', function () {
   before('setup UFragments contract', async function () {
+    const accounts = await chain.getUserAccounts();
     await setupContractAndAccounts(accounts);
   });
 
@@ -89,8 +96,9 @@ contract('UFragments:ERC20', function (accounts) {
   });
 });
 
-contract('UFragments:ERC20:transfer', function (accounts) {
+describe('UFragments:ERC20:transfer', function () {
   before('setup UFragments contract', async function () {
+    const accounts = await chain.getUserAccounts();
     await setupContractAndAccounts(accounts);
   });
 
@@ -117,8 +125,8 @@ contract('UFragments:ERC20:transfer', function (accounts) {
     it('should emit a transfer event', async function () {
       expect(r.logs.length).to.eq(1);
       expect(r.logs[0].event).to.eq('Transfer');
-      expect(r.logs[0].args.from).to.eq(owner);
-      expect(r.logs[0].args.to).to.eq(recipient);
+      expect(r.logs[0].args.from.toLowerCase()).to.eq(owner);
+      expect(r.logs[0].args.to.toLowerCase()).to.eq(recipient);
       r.logs[0].args.value.toString().should.be.eq(transferAmount.toString());
     });
   });
@@ -132,8 +140,10 @@ contract('UFragments:ERC20:transfer', function (accounts) {
   });
 });
 
-contract('UFragments:ERC20:transferFrom', function (accounts) {
+describe('UFragments:ERC20:transferFrom', function () {
   before('setup UFragments contract', async function () {
+    const accounts = await chain.getUserAccounts();
+
     await setupContractAndAccounts(accounts);
   });
 
@@ -187,16 +197,18 @@ contract('UFragments:ERC20:transferFrom', function (accounts) {
       it('emits a transfer event', async function () {
         expect(r.logs.length).to.eq(1);
         expect(r.logs[0].event).to.eq('Transfer');
-        expect(r.logs[0].args.from).to.eq(owner);
-        expect(r.logs[0].args.to).to.eq(recipient);
+        expect(r.logs[0].args.from.toLowerCase()).to.eq(owner);
+        expect(r.logs[0].args.to.toLowerCase()).to.eq(recipient);
         r.logs[0].args.value.toString().should.be.eq(transferAmount.toString());
       });
     });
   });
 });
 
-contract('UFragments:ERC20:approve', function (accounts) {
+describe('UFragments:ERC20:approve', function () {
   before('setup UFragments contract', async function () {
+    const accounts = await chain.getUserAccounts();
+
     await setupContractAndAccounts(accounts);
   });
 
@@ -215,8 +227,8 @@ contract('UFragments:ERC20:approve', function (accounts) {
         it('emits an approval event', async function () {
           expect(r.logs.length).to.eq(1);
           expect(r.logs[0].event).to.eq('Approval');
-          expect(r.logs[0].args.owner).to.eq(owner);
-          expect(r.logs[0].args.spender).to.eq(anotherAccount);
+          expect(r.logs[0].args.owner.toLowerCase()).to.eq(owner);
+          expect(r.logs[0].args.spender.toLowerCase()).to.eq(anotherAccount);
           r.logs[0].args.value.toString().should.be.eq(transferAmount.toString());
         });
       });
@@ -234,8 +246,8 @@ contract('UFragments:ERC20:approve', function (accounts) {
         it('emits an approval event', async function () {
           expect(r.logs.length).to.eq(1);
           expect(r.logs[0].event).to.eq('Approval');
-          expect(r.logs[0].args.owner).to.eq(owner);
-          expect(r.logs[0].args.spender).to.eq(anotherAccount);
+          expect(r.logs[0].args.owner.toLowerCase()).to.eq(owner);
+          expect(r.logs[0].args.spender.toLowerCase()).to.eq(anotherAccount);
           r.logs[0].args.value.toString().should.be.eq(transferAmount.toString());
         });
       });
@@ -255,8 +267,8 @@ contract('UFragments:ERC20:approve', function (accounts) {
         it('emits an approval event', async function () {
           expect(r.logs.length).to.eq(1);
           expect(r.logs[0].event).to.eq('Approval');
-          expect(r.logs[0].args.owner).to.eq(owner);
-          expect(r.logs[0].args.spender).to.eq(anotherAccount);
+          expect(r.logs[0].args.owner.toLowerCase()).to.eq(owner);
+          expect(r.logs[0].args.spender.toLowerCase()).to.eq(anotherAccount);
           r.logs[0].args.value.toString().should.be.eq(overdraftAmount.toString());
         });
       });
@@ -274,8 +286,8 @@ contract('UFragments:ERC20:approve', function (accounts) {
         it('emits an approval event', async function () {
           expect(r.logs.length).to.eq(1);
           expect(r.logs[0].event).to.eq('Approval');
-          expect(r.logs[0].args.owner).to.eq(owner);
-          expect(r.logs[0].args.spender).to.eq(anotherAccount);
+          expect(r.logs[0].args.owner.toLowerCase()).to.eq(owner);
+          expect(r.logs[0].args.spender.toLowerCase()).to.eq(anotherAccount);
           r.logs[0].args.value.toString().should.be.eq(overdraftAmount.toString());
         });
       });
@@ -283,8 +295,10 @@ contract('UFragments:ERC20:approve', function (accounts) {
   });
 });
 
-contract('UFragments:ERC20:increaseAllowance', function (accounts) {
+describe('UFragments:ERC20:increaseAllowance', function () {
   before('setup UFragments contract', async function () {
+    const accounts = await chain.getUserAccounts();
+
     await setupContractAndAccounts(accounts);
   });
 
@@ -302,8 +316,8 @@ contract('UFragments:ERC20:increaseAllowance', function (accounts) {
         it('emits an approval event', async function () {
           expect(r.logs.length).to.eq(1);
           expect(r.logs[0].event).to.eq('Approval');
-          expect(r.logs[0].args.owner).to.eq(owner);
-          expect(r.logs[0].args.spender).to.eq(anotherAccount);
+          expect(r.logs[0].args.owner.toLowerCase()).to.eq(owner);
+          expect(r.logs[0].args.spender.toLowerCase()).to.eq(anotherAccount);
           r.logs[0].args.value.toString().should.be.eq(transferAmount.toString());
         });
       });
@@ -321,8 +335,8 @@ contract('UFragments:ERC20:increaseAllowance', function (accounts) {
         it('emits an approval event', async function () {
           expect(r.logs.length).to.eq(1);
           expect(r.logs[0].event).to.eq('Approval');
-          expect(r.logs[0].args.owner).to.eq(owner);
-          expect(r.logs[0].args.spender).to.eq(anotherAccount);
+          expect(r.logs[0].args.owner.toLowerCase()).to.eq(owner);
+          expect(r.logs[0].args.spender.toLowerCase()).to.eq(anotherAccount);
           r.logs[0].args.value.toString().should.be.eq(transferAmountPlusOne.toString());
         });
       });
@@ -342,8 +356,8 @@ contract('UFragments:ERC20:increaseAllowance', function (accounts) {
         it('emits an approval event', async function () {
           expect(r.logs.length).to.eq(1);
           expect(r.logs[0].event).to.eq('Approval');
-          expect(r.logs[0].args.owner).to.eq(owner);
-          expect(r.logs[0].args.spender).to.eq(anotherAccount);
+          expect(r.logs[0].args.owner.toLowerCase()).to.eq(owner);
+          expect(r.logs[0].args.spender.toLowerCase()).to.eq(anotherAccount);
           r.logs[0].args.value.toString().should.be.eq(overdraftAmount.toString());
         });
       });
@@ -361,8 +375,8 @@ contract('UFragments:ERC20:increaseAllowance', function (accounts) {
         it('emits an approval event', async function () {
           expect(r.logs.length).to.eq(1);
           expect(r.logs[0].event).to.eq('Approval');
-          expect(r.logs[0].args.owner).to.eq(owner);
-          expect(r.logs[0].args.spender).to.eq(anotherAccount);
+          expect(r.logs[0].args.owner.toLowerCase()).to.eq(owner);
+          expect(r.logs[0].args.spender.toLowerCase()).to.eq(anotherAccount);
           r.logs[0].args.value.toString().should.be.eq(overdraftAmountPlusOne.toString());
         });
       });
@@ -370,8 +384,10 @@ contract('UFragments:ERC20:increaseAllowance', function (accounts) {
   });
 });
 
-contract('UFragments:ERC20:decreaseAllowance', function (accounts) {
+describe('UFragments:ERC20:decreaseAllowance', function () {
   before('setup UFragments contract', async function () {
+    const accounts = await chain.getUserAccounts();
+
     await setupContractAndAccounts(accounts);
   });
 
@@ -389,8 +405,8 @@ contract('UFragments:ERC20:decreaseAllowance', function (accounts) {
         it('emits an approval event', async function () {
           expect(r.logs.length).to.eq(1);
           expect(r.logs[0].event).to.eq('Approval');
-          expect(r.logs[0].args.owner).to.eq(owner);
-          expect(r.logs[0].args.spender).to.eq(anotherAccount);
+          expect(r.logs[0].args.owner.toLowerCase()).to.eq(owner);
+          expect(r.logs[0].args.spender.toLowerCase()).to.eq(anotherAccount);
           r.logs[0].args.value.toString().should.be.eq('0');
         });
       });
@@ -408,8 +424,8 @@ contract('UFragments:ERC20:decreaseAllowance', function (accounts) {
         it('emits an approval event', async function () {
           expect(r.logs.length).to.eq(1);
           expect(r.logs[0].event).to.eq('Approval');
-          expect(r.logs[0].args.owner).to.eq(owner);
-          expect(r.logs[0].args.spender).to.eq(anotherAccount);
+          expect(r.logs[0].args.owner.toLowerCase()).to.eq(owner);
+          expect(r.logs[0].args.spender.toLowerCase()).to.eq(anotherAccount);
           r.logs[0].args.value.toString().should.be.eq(unitTokenAmount.toString());
         });
       });
@@ -429,8 +445,8 @@ contract('UFragments:ERC20:decreaseAllowance', function (accounts) {
         it('emits an approval event', async function () {
           expect(r.logs.length).to.eq(1);
           expect(r.logs[0].event).to.eq('Approval');
-          expect(r.logs[0].args.owner).to.eq(owner);
-          expect(r.logs[0].args.spender).to.eq(anotherAccount);
+          expect(r.logs[0].args.owner.toLowerCase()).to.eq(owner);
+          expect(r.logs[0].args.spender.toLowerCase()).to.eq(anotherAccount);
           r.logs[0].args.value.toString().should.be.eq('0');
         });
       });
@@ -448,8 +464,8 @@ contract('UFragments:ERC20:decreaseAllowance', function (accounts) {
         it('emits an approval event', async function () {
           expect(r.logs.length).to.eq(1);
           expect(r.logs[0].event).to.eq('Approval');
-          expect(r.logs[0].args.owner).to.eq(owner);
-          expect(r.logs[0].args.spender).to.eq(anotherAccount);
+          expect(r.logs[0].args.owner.toLowerCase()).to.eq(owner);
+          expect(r.logs[0].args.spender.toLowerCase()).to.eq(anotherAccount);
           r.logs[0].args.value.toString().should.be.eq(unitTokenAmount.toString());
         });
       });

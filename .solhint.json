@@ -1,5 +1,5 @@
 {
-    "extends": "default",
+    "extends": "solhint:default",
     "rules": {
         "not-rely-on-time": [false],
         "no-simple-event-func-name": [false],

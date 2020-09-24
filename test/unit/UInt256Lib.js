@@ -1,15 +1,18 @@
-const UInt256LibMock = artifacts.require('UInt256LibMock');
+const { contract, web3 } = require('@openzeppelin/test-environment');
+
+const UInt256LibMock = contract.fromArtifact('UInt256LibMock');
 
 const BigNumber = web3.utils.BN;
 const _require = require('app-root-path').require;
 const BlockchainCaller = _require('/util/blockchain_caller');
 const chain = new BlockchainCaller(web3);
+const expect = require('chai').expect;
 
 require('chai')
   .use(require('chai-bignumber')(BigNumber))
   .should();
 
-contract('UInt256Lib', () => {
+describe('UInt256Lib', () => {
   const MAX_INT256 = new BigNumber(2).pow(new BigNumber(255)).sub(new BigNumber(1));
 
   let UInt256Lib;

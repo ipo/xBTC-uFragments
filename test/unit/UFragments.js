@@ -1,9 +1,12 @@
-const UFragments = artifacts.require('UFragments.sol');
+const { contract, web3 } = require('@openzeppelin/test-environment');
+
+const UFragments = contract.fromArtifact('UFragments');
 const _require = require('app-root-path').require;
 const BlockchainCaller = _require('/util/blockchain_caller');
 const chain = new BlockchainCaller(web3);
 const BigNumber = web3.utils.BN;
 const encodeCall = require('zos-lib/lib/helpers/encodeCall').default;
+const expect = require('chai').expect;
 
 require('chai')
   .use(require('chai-bignumber')(BigNumber))
@@ -37,7 +40,7 @@ async function setupContracts () {
   expect(log.args.newOwner.toLowerCase()).to.eq(deployer.toLowerCase());
 }
 
-contract('UFragments', function (accounts) {
+describe('UFragments', function () {
   before('setup UFragments contract', setupContracts);
 
   it('should reject any ether sent to it', async function () {
@@ -47,7 +50,7 @@ contract('UFragments', function (accounts) {
   });
 });
 
-contract('UFragments:Initialization', function (accounts) {
+describe('UFragments:Initialization', function () {
   before('setup UFragments contract', setupContracts);
 
   it('should transfer ~5M uFragments to the deployer', async function () {
@@ -85,7 +88,9 @@ contract('UFragments:Initialization', function (accounts) {
   });
 });
 
-contract('UFragments:setMonetaryPolicy', function (accounts) {
+describe('UFragments:setMonetaryPolicy', async function () {
+  const accounts = await chain.getUserAccounts();
+
   const policy = accounts[1];
 
   before('setup UFragments contract', setupContracts);
@@ -104,7 +109,9 @@ contract('UFragments:setMonetaryPolicy', function (accounts) {
   });
 });
 
-contract('UFragments:setMonetaryPolicy:accessControl', function (accounts) {
+describe('UFragments:setMonetaryPolicy:accessControl', async function () {
+  const accounts = await chain.getUserAccounts();
+
   const policy = accounts[1];
 
   before('setup UFragments contract', setupContracts);
@@ -116,7 +123,9 @@ contract('UFragments:setMonetaryPolicy:accessControl', function (accounts) {
   });
 });
 
-contract('UFragments:setMonetaryPolicy:accessControl', function (accounts) {
+describe('UFragments:setMonetaryPolicy:accessControl', async function () {
+  const accounts = await chain.getUserAccounts();
+
   const policy = accounts[1];
   const user = accounts[2];
 
@@ -129,7 +138,7 @@ contract('UFragments:setMonetaryPolicy:accessControl', function (accounts) {
   });
 });
 
-contract('UFragments:Rebase:accessControl', function (accounts) {
+describe('UFragments:Rebase:accessControl', function () {
   before('setup UFragments contract', async function () {
     await setupContracts();
     await uFragments.setMonetaryPolicy(user, {from: deployer});
@@ -148,7 +157,9 @@ contract('UFragments:Rebase:accessControl', function (accounts) {
   });
 });
 
-contract('UFragments:Rebase:Expansion', function (accounts) {
+describe('UFragments:Rebase:Expansion', async function () {
+  const accounts = await chain.getUserAccounts();
+
   // Rebase +5M (10%), with starting balances A:750 and B:250.
   const A = accounts[2];
   const B = accounts[3];
@@ -192,7 +203,9 @@ contract('UFragments:Rebase:Expansion', function (accounts) {
   });
 });
 
-contract('UFragments:Rebase:Expansion', function (accounts) {
+describe('UFragments:Rebase:Expansion', async function () {
+  const accounts = await chain.getUserAccounts();
+
   const policy = accounts[1];
   const MAX_SUPPLY = new BigNumber(2).pow(new BigNumber(128)).sub(new BigNumber(1));
 
@@ -241,7 +254,9 @@ contract('UFragments:Rebase:Expansion', function (accounts) {
   });
 });
 
-contract('UFragments:Rebase:NoChange', function (accounts) {
+describe('UFragments:Rebase:NoChange', async function () {
+  const accounts = await chain.getUserAccounts();
+
   // Rebase (0%), with starting balances A:750 and B:250.
   const A = accounts[2];
   const B = accounts[3];
@@ -277,7 +292,9 @@ contract('UFragments:Rebase:NoChange', function (accounts) {
   });
 });
 
-contract('UFragments:Rebase:Contraction', function (accounts) {
+describe('UFragments:Rebase:Contraction', async function () {
+  const accounts = await chain.getUserAccounts();
+
   // Rebase -5M (-10%), with starting balances A:750 and B:250.
   const A = accounts[2];
   const B = accounts[3];
@@ -314,7 +331,9 @@ contract('UFragments:Rebase:Contraction', function (accounts) {
   });
 });
 
-contract('UFragments:Transfer', function (accounts) {
+describe('UFragments:Transfer', async function () {
+  const accounts = await chain.getUserAccounts();
+
   const A = accounts[2];
   const B = accounts[3];
   const C = accounts[4];
@@ -379,7 +398,7 @@ contract('UFragments:Transfer', function (accounts) {
     it('emits an approval event', async function () {
       expect(r.logs.length).to.eq(1);
       expect(r.logs[0].event).to.eq('Approval');
-      expect(r.logs[0].args.owner).to.eq(owner);
+      expect(r.logs[0].args.owner.toLowerCase()).to.eq(owner);
       expect(r.logs[0].args.spender).to.eq(ZERO_ADDRESS);
       r.logs[0].args.value.toString().should.be.eq(transferAmount.toString());
     });
