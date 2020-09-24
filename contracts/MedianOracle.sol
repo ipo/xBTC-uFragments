@@ -298,15 +298,15 @@ contract MedianOracle is Ownable, IOracle {
     {
         Ownable.initialize(owner_);
 
+        minimumProviders = 1;
+        maxReportExpirationTime = 520 weeks;
+
         require(reportExpirationTimeSec_ <= maxReportExpirationTime);
         require(minimumProviders_ > 0);
 
         reportExpirationTimeSec = reportExpirationTimeSec_;
         reportDelaySec = reportDelaySec_;
         minimumProviders = minimumProviders_;
-
-        minimumProviders = 1;
-        maxReportExpirationTime = 520 weeks;
     }
 }
 
