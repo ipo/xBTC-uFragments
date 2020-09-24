@@ -13,7 +13,7 @@ function toUFrgDenomination (x) {
   return new BigNumber(x).mul(new BigNumber(10 ** DECIMALS));
 }
 const DECIMALS = 9;
-const INTIAL_SUPPLY = toUFrgDenomination(50 * 10 ** 6);
+const INTIAL_SUPPLY = toUFrgDenomination(5042019);
 const transferAmount = toUFrgDenomination(10);
 const unitTokenAmount = toUFrgDenomination(1);
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
@@ -50,7 +50,7 @@ contract('UFragments', function (accounts) {
 contract('UFragments:Initialization', function (accounts) {
   before('setup UFragments contract', setupContracts);
 
-  it('should transfer 50M uFragments to the deployer', async function () {
+  it('should transfer ~5M uFragments to the deployer', async function () {
     (await uFragments.balanceOf.call(deployer)).toString().should.be.eq(INTIAL_SUPPLY.toString());
     const log = r.logs[1];
     expect(log).to.exist;
@@ -60,7 +60,7 @@ contract('UFragments:Initialization', function (accounts) {
     log.args.value.toString().should.be.eq(INTIAL_SUPPLY.toString());
   });
 
-  it('should set the totalSupply to 50M', async function () {
+  it('should set the totalSupply to ~5M', async function () {
     initialSupply.toString().should.be.eq(INTIAL_SUPPLY.toString());
   });
 
