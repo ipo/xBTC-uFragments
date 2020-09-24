@@ -2,8 +2,8 @@ const { runCoverage } = require('@openzeppelin/test-environment');
 
 async function main () {
   await runCoverage(
-    ['mocks', 'usingtellor/'],
-    'npm run compile',
+    ['mocks', 'usingtellor/', 'lib/Select.sol'],
+    'yarn compile',
     './node_modules/.bin/mocha --exit --timeout 10000 --recursive'.split(' '),
   );
 }
