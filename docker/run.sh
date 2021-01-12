@@ -15,7 +15,6 @@ docker run -it \
     --name $CONTAINER_NAME \
     --net host \
     $DOCKER_IMAGE $@
-#    --volume `pwd`/:/code/:rw \
 #    --rm \
 
 #docker container rm $CONTAINER_NAME

@@ -81,3 +81,7 @@ coverageEnv/
 # docker files
 docker/Dockerfile
 docker/**.sh
+
+**_flattened.sol
+contracts/usingtellor/**
+key_**

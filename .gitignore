@@ -74,3 +74,5 @@ coverage/
 coverageEnv/
 
 .zos.session
+**_flattened.sol
+key_**
