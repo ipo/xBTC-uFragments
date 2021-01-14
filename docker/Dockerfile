@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-mysqldb
 RUN cd /tmp/ && wget https://bootstrap.pypa.io/get-pip.py && python3 get-pip.py
 
-RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - && apt-get install -y nodejs
+RUN curl -sL https://deb.nodesource.com/setup_14.x | bash - && apt-get install -y nodejs
 
 RUN apt-get install -y gnupg2
 RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \

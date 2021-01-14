@@ -13,7 +13,7 @@
     "manager": "zos",
     "compilerSettings": {
       "optimizer": {
-        "enabled": true,
+        "enabled": false,
         "runs": "200"
       }
     },

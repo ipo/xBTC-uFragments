@@ -99,7 +99,7 @@ describe('Orchestrator', function () {
   describe('when there is a single transaction', async function () {
     before('adding a transaction', async function () {
       const updateOneArgEncoded = mockDownstream.contract.methods.updateOneArg(12345).encodeABI();
-      orchestrator.addTransaction(mockDownstream.address, updateOneArgEncoded, {from: deployer});
+      await orchestrator.addTransaction(mockDownstream.address, updateOneArgEncoded, {from: deployer});
       r = await orchestrator.rebase();
     });
 
@@ -123,7 +123,7 @@ describe('Orchestrator', function () {
     it('should call the transaction', async function () {
       await expectEvent.inTransaction(
         r.tx,
-        mockPolicy,
+        mockDownstream,
         'FunctionCalled',
         {
           instanceName: 'MockDownstream',
@@ -287,7 +287,7 @@ describe('Orchestrator', function () {
     it('should call rebase on policy', async function () {
       await expectEvent.inTransaction(
         r.tx,
-        mockDownstream,
+        mockPolicy,
         'FunctionCalled',
         {
           instanceName: 'UFragmentsPolicy',
