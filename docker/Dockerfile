@@ -28,9 +28,8 @@ RUN apt-get install -y sudo lsof make
 RUN pip3 install arrow
 
 WORKDIR /code/
-ADD . /code/
-
-RUN git submodule update --init && rm contracts/usingtellor/flatfiles/usingTellor_flat_2020_05_17.sol
+COPY yarn.lock package.json /code/
 RUN yarn
+ADD . /code/
 
 CMD yarn compile && yarn lint && yarn coverage

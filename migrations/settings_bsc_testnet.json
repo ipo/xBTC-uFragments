@@ -1,0 +1,7 @@
+{
+    "ownerAddress": "0x853a9a00E3041C9bDeF622A120F94B8dB1629ee0",
+    "tokenName": "Test Token",
+    "tokenTicker": "ABC",
+    "startDominus": "100000000",
+    "oracleProviderAddress": "0x853a9a00E3041C9bDeF622A120F94B8dB1629ee0"
+}

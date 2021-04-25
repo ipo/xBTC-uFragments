@@ -1,3 +1,4 @@
+const fs = require('fs');
 const connectionConfig = require('frg-ethereum-runners/config/network_config.json');
 
 //const HDWalletProvider = require("@truffle/hdwallet-provider");
@@ -9,12 +10,23 @@ try {
   privKeysMainnet = [
     fs.readFileSync("key_xbtc_mainnet.txt").toString().trim(), // Mainnet
   ];
+  privKeysBSCTestnet = [
+    fs.readFileSync("key_xbtc_bsc_testnet.txt").toString().trim(), // BSC Testnet
+  ];
+  privKeysBSCMainnet = [
+    fs.readFileSync("key_xbtc_bsc_mainnet.txt").toString().trim(), // BSC Mainnet
+  ];
   
   infuraRinkeby = fs.readFileSync("key_xbtc_infura_rinkeby.txt").toString().trim();
   infuraMainnet = fs.readFileSync("key_xbtc_infura_mainnet.txt").toString().trim();
 
+  rpcBSCTestnet = fs.readFileSync("key_xbtc_rpc_bsc_testnet.txt").toString().trim().split('\n')[0].trim();
+  rpcBSCMainnet = fs.readFileSync("key_xbtc_rpc_bsc_mainnet.txt").toString().trim().split('\n')[0].trim();
+
   etherscanAPIKey = fs.readFileSync("key_xbtc_etherscan_api_key.txt").toString().trim();
+  bscscanAPIKey = fs.readFileSync("key_xbtc_bscscan_api_key.txt").toString().trim();
 } catch (e) {
+  console.error('Failed to load keys:', e)
   privKeysRinkeby = [
     "",
   ];
@@ -25,6 +37,7 @@ try {
   infuraRinkeby = "";
   infuraMainnet = "";
   etherscanAPIKey = "";
+  bscscanAPIKey = "";
 }
 
 
@@ -46,7 +59,7 @@ module.exports = {
       provider: function() {
           return new HDWalletProvider(privKeysRinkeby, infuraRinkeby);
       },
-      network_id: 4
+      network_id: 4,
     },
     mainnet: {
       provider: function() {
@@ -55,18 +68,40 @@ module.exports = {
       network_id: 1,
       gasPrice: getGweiEnv() + '000000000'
     },
+    bsc_testnet: {
+      provider: function() {
+          return new HDWalletProvider(privKeysBSCTestnet, rpcBSCTestnet);
+      },
+      network_id: 97,
+    },
+    bsc_mainnet: {
+      provider: function() {
+          return new HDWalletProvider(privKeysBSCMainnet, rpcBSCMainnet);
+      },
+      network_id: 56,
+      gasPrice: getGweiEnv() + '000000000'
+    },
   },
   compilers: {
     solc: {
       version: '0.5.17',
       settings: {
         optimizer: {
-          enabled: false
+          enabled: true,
+          runs: 200,
         }
       }
     }
   },
   mocha: {
     enableTimeouts: false
-  }
+  },
+
+  api_keys: {
+    etherscan: etherscanAPIKey,
+    bscscan: bscscanAPIKey
+  },
+  plugins: [
+    'truffle-plugin-verify'
+  ]
 };

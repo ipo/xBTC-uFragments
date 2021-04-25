@@ -16,7 +16,7 @@ function toUFrgDenomination (x) {
   return new BigNumber(x).mul(new BigNumber(10 ** DECIMALS));
 }
 const DECIMALS = 9;
-const INTIAL_SUPPLY = toUFrgDenomination(5042019);
+const INITIAL_SUPPLY = new BigNumber('9875509696016110');
 const transferAmount = toUFrgDenomination(10);
 const unitTokenAmount = toUFrgDenomination(1);
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
@@ -54,17 +54,17 @@ describe('UFragments:Initialization', function () {
   before('setup UFragments contract', setupContracts);
 
   it('should transfer ~5M uFragments to the deployer', async function () {
-    (await uFragments.balanceOf.call(deployer)).toString().should.be.eq(INTIAL_SUPPLY.toString());
+    (await uFragments.balanceOf.call(deployer)).toString().should.be.eq(INITIAL_SUPPLY.toString());
     const log = r.logs[1];
     expect(log).to.exist;
     expect(log.event).to.eq('Transfer');
     expect(log.args.from).to.eq(ZERO_ADDRESS);
     expect(log.args.to.toLowerCase()).to.eq(deployer.toLowerCase());
-    log.args.value.toString().should.be.eq(INTIAL_SUPPLY.toString());
+    log.args.value.toString().should.be.eq(INITIAL_SUPPLY.toString());
   });
 
   it('should set the totalSupply to ~5M', async function () {
-    initialSupply.toString().should.be.eq(INTIAL_SUPPLY.toString());
+    initialSupply.toString().should.be.eq(INITIAL_SUPPLY.toString());
   });
 
   it('should set the owner', async function () {
@@ -164,7 +164,7 @@ describe('UFragments:Rebase:Expansion', async function () {
   const A = accounts[2];
   const B = accounts[3];
   const policy = accounts[1];
-  const rebaseAmt = INTIAL_SUPPLY / 10;
+  const rebaseAmt = INITIAL_SUPPLY / 10;
 
   before('setup UFragments contract', async function () {
     await setupContracts();
@@ -299,7 +299,7 @@ describe('UFragments:Rebase:Contraction', async function () {
   const A = accounts[2];
   const B = accounts[3];
   const policy = accounts[1];
-  const rebaseAmt = INTIAL_SUPPLY / 10;
+  const rebaseAmt = INITIAL_SUPPLY / 10;
 
   before('setup UFragments contract', async function () {
     await setupContracts();

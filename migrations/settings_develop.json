@@ -1,0 +1,7 @@
+{
+    "ownerAddress": "test_account",
+    "tokenName": "bxBTC",
+    "tokenTicker": "bxBTC",
+    "startDominus": "100000000",
+    "oracleProviderAddress": "test_account"
+}

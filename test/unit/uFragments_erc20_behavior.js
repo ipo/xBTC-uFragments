@@ -46,7 +46,7 @@ function toTokenDenomination (x) {
   return new BigNumber(x).mul(new BigNumber(10 ** DECIMALS));
 }
 const DECIMALS = 9;
-const INITIAL_SUPPLY = toTokenDenomination(5042019);
+const INITIAL_SUPPLY = new BigNumber('9875509696016110');
 const transferAmount = toTokenDenomination(10);
 const unitTokenAmount = toTokenDenomination(1);
 const overdraftAmount = INITIAL_SUPPLY.add(unitTokenAmount);
